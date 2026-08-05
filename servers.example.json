@@ -1,0 +1,18 @@
+{
+  "palworld": {
+    "label": "Palworld",
+    "unit": "palworld",
+    "address": "palworld.example.com:8211",
+    "port": 8211,
+    "protocol": "udp",
+    "startupMs": 120000
+  },
+  "minecraft": {
+    "label": "Minecraft",
+    "unit": "minecraft",
+    "address": "mc.example.com:25565",
+    "port": 25565,
+    "protocol": "tcp",
+    "roleId": "123456789012345678"
+  }
+}
