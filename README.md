@@ -17,12 +17,14 @@ Access has two tiers: **every** command requires the base role (`DEFAULT_ROLE_ID
 
 ```
 src/
-├── main.ts                 entry point — Discord client and command handlers
+├── main.ts                 entry point — Discord client, role gate, command dispatch
 ├── core/
 │   └── cfg.ts              types, validated servers.json loader, env access
 ├── discord/
-│   ├── commands.ts         slash-command definitions (dropdown built from servers.json)
+│   ├── commands.ts         slash-command definitions and command-name enums
 │   └── roles.ts            role checks (base role + per-server role)
+├── handler/
+│   └── resolve.ts          command handlers — /bot reply, status/start/stop flows
 └── server/
     └── state.ts            unit state, socket check, start/stop via sudo
 ```

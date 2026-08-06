@@ -1,7 +1,18 @@
 import { SlashCommandBuilder } from 'discord.js';
+
 import { SERVERS } from '../core/cfg.js';
 
-const choices = [...SERVERS].map(([value, srv]) => ({
+export enum CommandBase {
+	BASE = 'bot'
+}
+
+export enum CommandServer {
+	START = 'start',
+	STATUS = 'status',
+	STOP = 'stop'
+}
+
+const SERVER_CHOICES = [...SERVERS].map(([value, srv]) => ({
 	name: srv.label,
 	value
 }));
@@ -18,7 +29,7 @@ export const commands = [
 				.setName('server')
 				.setDescription('Which server?')
 				.setRequired(true)
-				.addChoices(...choices)
+				.addChoices(...SERVER_CHOICES)
 		),
 	new SlashCommandBuilder()
 		.setName('start')
@@ -28,7 +39,7 @@ export const commands = [
 				.setName('server')
 				.setDescription('Which server?')
 				.setRequired(true)
-				.addChoices(...choices)
+				.addChoices(...SERVER_CHOICES)
 		),
 	new SlashCommandBuilder()
 		.setName('stop')
@@ -38,6 +49,6 @@ export const commands = [
 				.setName('server')
 				.setDescription('Which server?')
 				.setRequired(true)
-				.addChoices(...choices)
+				.addChoices(...SERVER_CHOICES)
 		)
 ].map((c) => c.toJSON());
