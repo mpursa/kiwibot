@@ -4,10 +4,10 @@ import {
   MessageFlags,
   REST,
   Routes,
-  SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from "discord.js";
-import { loadServers, requireEnv, type ServerConfig } from "./config.js";
+import { commands } from "./commands.js";
+import { SERVERS, requireEnv, type ServerConfig } from "./config.js";
 import {
   describe,
   getState,
@@ -21,45 +21,6 @@ const TOKEN = requireEnv("DISCORD_TOKEN");
 const APP_ID = requireEnv("APP_ID");
 const GUILD_ID = requireEnv("GUILD_ID");
 const DEFAULT_ROLE_ID = requireEnv("DEFAULT_ROLE_ID");
-
-const SERVERS = loadServers(new URL("../servers.json", import.meta.url));
-
-const choices = [...SERVERS].map(([value, srv]) => ({
-  name: srv.label,
-  value,
-}));
-
-const commands = [
-  new SlashCommandBuilder()
-    .setName("status")
-    .setDescription("Game server status")
-    .addStringOption((o) =>
-      o
-        .setName("server")
-        .setDescription("Which server (all if omitted)")
-        .addChoices(...choices),
-    ),
-  new SlashCommandBuilder()
-    .setName("start")
-    .setDescription("Start a game server")
-    .addStringOption((o) =>
-      o
-        .setName("server")
-        .setDescription("Which server")
-        .setRequired(true)
-        .addChoices(...choices),
-    ),
-  new SlashCommandBuilder()
-    .setName("stop")
-    .setDescription("Stop a game server")
-    .addStringOption((o) =>
-      o
-        .setName("server")
-        .setDescription("Which server")
-        .setRequired(true)
-        .addChoices(...choices),
-    ),
-].map((c) => c.toJSON());
 
 function permitted(
   interaction: ChatInputCommandInteraction,
@@ -90,6 +51,7 @@ async function handleStatusAll(
   await interaction.editReply(lines.join("\n"));
 }
 
+// ENTRY POINT
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once("clientReady", async (c) => {

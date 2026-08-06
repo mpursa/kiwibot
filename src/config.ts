@@ -18,12 +18,7 @@ const DEFAULT_STARTUP_MS = 120_000;
 // Discord interaction tokens expire after 15 minutes; the final editReply after
 // waitFor() must land before that, so cap the configurable wait at 14 minutes.
 const MAX_STARTUP_MS = 840_000;
-
-class ConfigError extends Error {}
-
-function bad(where: string, msg: string): never {
-  throw new ConfigError(`servers.json: ${where} ${msg}`);
-}
+export const SERVERS = loadServers(new URL("../servers.json", import.meta.url));
 
 function requireString(
   o: Record<string, unknown>,
@@ -32,13 +27,13 @@ function requireString(
 ): string {
   const v = o[key];
   if (typeof v !== "string" || v.trim() === "")
-    bad(`${where}.${key}`, "must be a non-empty string");
+    throw new Error(`servers.json: ${where}.${key} must be a non-empty string`);
   return v;
 }
 
 function parseServer(key: string, raw: unknown): ServerConfig {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-    bad(key, "must be an object");
+    throw new Error(`servers.json: ${key} must be an object`);
   }
   const o = raw as Record<string, unknown>;
 
@@ -49,12 +44,14 @@ function parseServer(key: string, raw: unknown): ServerConfig {
     port < 1 ||
     port > 65_535
   ) {
-    bad(`${key}.port`, "must be an integer between 1 and 65535");
+    throw new Error(
+      `servers.json: ${key}.port must be an integer between 1 and 65535`,
+    );
   }
 
   const protocol = o["protocol"];
   if (protocol !== "tcp" && protocol !== "udp") {
-    bad(`${key}.protocol`, "must be 'tcp' or 'udp'");
+    throw new Error(`servers.json: ${key}.protocol must be 'tcp' or 'udp'`);
   }
 
   const startupRaw = o["startupMs"];
@@ -64,15 +61,14 @@ function parseServer(key: string, raw: unknown): ServerConfig {
       startupRaw <= 0 ||
       startupRaw > MAX_STARTUP_MS)
   ) {
-    bad(
-      `${key}.startupMs`,
-      `must be a positive number of ms, at most ${MAX_STARTUP_MS}`,
+    throw new Error(
+      `servers.json: ${key}.startupMs must be a positive number of ms, at most ${MAX_STARTUP_MS}`,
     );
   }
 
   const roleId = o["roleId"];
   if (roleId !== undefined && typeof roleId !== "string") {
-    bad(`${key}.roleId`, "must be a string if present");
+    throw new Error(`servers.json: ${key}.roleId must be a string if present`);
   }
 
   return {
@@ -86,28 +82,35 @@ function parseServer(key: string, raw: unknown): ServerConfig {
   };
 }
 
-export function loadServers(path: URL): Servers {
+function loadServers(path: URL): Servers {
   let parsed: unknown;
   try {
     parsed = JSON.parse(readFileSync(path, "utf8"));
   } catch (err) {
-    throw new ConfigError(
+    throw new Error(
       `Could not read ${path.pathname}: ${(err as Error).message}`,
     );
   }
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    bad("root", "must be an object keyed by server name");
+    throw new Error(
+      `servers.json: root must be an object keyed by server name`,
+    );
   }
 
   const map = new Map<string, ServerConfig>();
   for (const [key, raw] of Object.entries(parsed as Record<string, unknown>)) {
-    if (!/^[a-z0-9-]+$/.test(key))
-      bad(key, "key must be lowercase letters, digits and hyphens");
+    if (!/^[a-z0-9-]+$/.test(key)) {
+      throw new Error(
+        `servers.json: ${key} key must be lowercase letters, digits and hyphens`,
+      );
+    }
     map.set(key, parseServer(key, raw));
   }
-  if (map.size === 0) bad("root", "defines no servers");
+  if (map.size === 0) throw new Error(`servers.json: root defines no servers`);
   if (map.size > 25)
-    bad("root", "Discord allows at most 25 choices per option");
+    throw new Error(
+      `servers.json: Discord allows at most 25 choices per option`,
+    );
 
   return map;
 }
@@ -115,6 +118,6 @@ export function loadServers(path: URL): Servers {
 export function requireEnv(name: string): string {
   const v = process.env[name];
   if (v === undefined || v === "")
-    throw new ConfigError(`Missing environment variable ${name}`);
+    throw new Error(`Missing environment variable ${name}`);
   return v;
 }
