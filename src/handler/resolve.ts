@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { ServerConfig, SERVERS } from '../core/cfg.js';
-import { Command } from '../discord/commands.js';
+import { Command, COMMANDS } from '../discord/commands.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
 import { hasServerRole } from '../discord/roles.js';
 
@@ -9,6 +9,11 @@ export async function resolveBasecommand(interaction: ChatInputCommandInteractio
 	switch (interaction.commandName) {
 		case Command.BASE: {
 			await baseResponse(interaction);
+
+			break;
+		}
+		case Command.LIST: {
+			await listCommandResponse(interaction);
 
 			break;
 		}
@@ -78,6 +83,15 @@ export async function unknownCommand(interaction: ChatInputCommandInteraction): 
 	});
 
 	return;
+}
+
+async function listCommandResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	const lines = COMMANDS.map((command) => `\`/${command.name}\` — ${command.description}`);
+
+	await interaction.reply({
+		content: lines.join('\n'),
+		flags: MessageFlags.Ephemeral
+	});
 }
 
 async function existingButUnusedCommand(interaction: ChatInputCommandInteraction): Promise<void> {
