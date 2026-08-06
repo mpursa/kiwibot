@@ -1,28 +1,28 @@
 {
-  "name": "serverbot",
-  "version": "1.0.0",
-  "description": "Discord bot for starting and stopping game servers via systemd",
-  "type": "module",
-  "author": {
-    "name": "mpursa",
-    "email": "m.pretto93@gmail.com",
-    "url": "https://github.com/mpursa"
-  },
-  "license": "BSD-2-Clause",
-  "engines": {
-    "node": ">=20.6"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "start": "node --env-file=.env dist/index.js",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "discord.js": "^14.16.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.6.0",
-    "@types/node": "^22.7.0"
-  }
+	"name": "serverbot",
+	"version": "1.0.0",
+	"description": "Discord bot for starting and stopping game servers via systemd",
+	"type": "module",
+	"author": {
+		"name": "mpursa",
+		"email": "m.pretto93@gmail.com",
+		"url": "https://github.com/mpursa"
+	},
+	"license": "BSD-2-Clause",
+	"engines": {
+		"node": ">=20.6"
+	},
+	"scripts": {
+		"build": "tsc",
+		"watch": "tsc --watch",
+		"start": "node --env-file=.env dist/main.js",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"discord.js": "^14.16.0"
+	},
+	"devDependencies": {
+		"typescript": "^5.6.0",
+		"@types/node": "^22.7.0"
+	}
 }
