@@ -45,9 +45,14 @@ npm start            # needs a filled-in .env and servers.json
 
 Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.
 
+## Guides
+
+- [Discord setup](docs/discord-setup.md) — create the application, fill `.env`, invite the bot, lock it down to a channel and role
+- [VPS setup](docs/vps-setup.md) — service account, sudoers fence, deploy, systemd unit, updating, adding a game
+
 ## Deployment
 
-System account, sudoers fence, root-owned `/opt/serverbot`, and the hardened systemd unit with `ExecStart=/usr/bin/node /opt/serverbot/dist/main.js`. Three things worth remembering:
+Full walkthrough in [docs/vps-setup.md](docs/vps-setup.md): system account, sudoers fence, root-owned `/opt/serverbot`, and the hardened systemd unit with `ExecStart=/usr/bin/node /opt/serverbot/dist/main.js`. Three things worth remembering:
 
 - The unit must keep `NoNewPrivileges=false` **and** avoid seccomp-backed hardening options (`ProtectKernelTunables=`, `RestrictSUIDSGID=`, `SystemCallFilter=`, …) — for a non-root service those silently force the no-new-privileges flag on and break sudo.
 - When updating, clean the build output before compiling (`rm -rf dist`) — `tsc` never deletes stale files, and a leftover entry point from an older layout can silently keep running.
