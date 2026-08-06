@@ -1,12 +1,13 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { ServerConfig } from '../core/cfg.js';
-import { CommandBase, CommandServer } from '../discord/commands.js';
+import { ServerConfig, SERVERS } from '../core/cfg.js';
+import { Command } from '../discord/commands.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
+import { hasServerRole } from '../discord/roles.js';
 
 export async function resolveBasecommand(interaction: ChatInputCommandInteraction): Promise<void> {
 	switch (interaction.commandName) {
-		case CommandBase.BASE: {
+		case Command.BASE: {
 			await baseResponse(interaction);
 
 			break;
@@ -20,11 +21,29 @@ export async function resolveBasecommand(interaction: ChatInputCommandInteractio
 }
 
 export async function resolveServerCommand(
-	interaction: ChatInputCommandInteraction,
-	srv: ServerConfig
+	interaction: ChatInputCommandInteraction
 ): Promise<void> {
+	const key = interaction.options.getString('server');
+	// Resolve from config. noUncheckedIndexedAccess in tsconfig makes this check mandatory.
+	const srv = key === null ? undefined : SERVERS.get(key);
+	// Check server exists.
+	if (srv === undefined) {
+		await interaction.reply({
+			content: 'Unknown server!',
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+	// Server role check.
+	if (!hasServerRole(interaction, srv)) {
+		await interaction.reply({
+			content: `You don't have access to ${srv.label}!`,
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
 	switch (interaction.commandName) {
-		case CommandServer.STATUS: {
+		case Command.SERVER_STATUS: {
 			// Defer before touching systemctl/ss: Discord gives us 3 seconds to ack,
 			// and subprocess spawns on a loaded machine can blow that window.
 			await interaction.deferReply();
@@ -32,13 +51,13 @@ export async function resolveServerCommand(
 
 			break;
 		}
-		case CommandServer.START: {
+		case Command.SERVER_START: {
 			await interaction.deferReply();
 			await startServer(interaction, srv);
 
 			break;
 		}
-		case CommandServer.STOP: {
+		case Command.SERVER_STOP: {
 			await interaction.deferReply();
 			await stopServer(interaction, srv);
 
@@ -50,6 +69,15 @@ export async function resolveServerCommand(
 			break;
 		}
 	}
+}
+
+export async function unknownCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+	await interaction.reply({
+		content: `Invalid command! Use /${Command.BASE} to have a list of commands.`,
+		flags: MessageFlags.Ephemeral
+	});
+
+	return;
 }
 
 async function existingButUnusedCommand(interaction: ChatInputCommandInteraction): Promise<void> {

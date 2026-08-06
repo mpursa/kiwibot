@@ -17,7 +17,7 @@ Access has two tiers: **every** command requires the base role (`DEFAULT_ROLE_ID
 
 ```
 src/
-├── main.ts                 entry point — Discord client, role gate, command dispatch
+├── main.ts                 entry point — Discord client, base role gate, command dispatch
 ├── core/
 │   └── cfg.ts              types, validated servers.json loader, env access
 ├── discord/

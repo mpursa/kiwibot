@@ -1,9 +1,9 @@
 import { Client, GatewayIntentBits, MessageFlags, REST, Routes } from 'discord.js';
 
 import { SERVERS, requireEnv } from './core/cfg.js';
-import { resolveBasecommand, resolveServerCommand } from './handler/resolve.js';
-import { CommandBase, CommandServer, commands } from './discord/commands.js';
-import { hasDefaultRole, hasServerRole } from './discord/roles.js';
+import { resolveBasecommand, resolveServerCommand, unknownCommand } from './handler/resolve.js';
+import { CommandType, discordCommands, getCommandFromName } from './discord/commands.js';
+import { hasDefaultRole } from './discord/roles.js';
 import { sudoAllows } from './server/state.js';
 
 const TOKEN = requireEnv('DISCORD_TOKEN');
@@ -26,7 +26,7 @@ client.once('clientReady', async (c) => {
 	}
 	await new REST()
 		.setToken(TOKEN)
-		.put(Routes.applicationGuildCommands(APP_ID, GUILD_ID), { body: commands });
+		.put(Routes.applicationGuildCommands(APP_ID, GUILD_ID), { body: discordCommands });
 	console.log(
 		`serverbot ready as ${c.user.tag} — ${SERVERS.size} server(s): ${[...SERVERS.keys()].join(', ')}`
 	);
@@ -34,8 +34,6 @@ client.once('clientReady', async (c) => {
 
 client.on('interactionCreate', async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
-
-	const key = interaction.options.getString('server');
 
 	try {
 		// Base role check.
@@ -47,35 +45,24 @@ client.on('interactionCreate', async (interaction) => {
 			return;
 		}
 
-		if ((<any>Object).values(CommandBase).includes(interaction.commandName)) {
-			// Resolve command.
-			await resolveBasecommand(interaction);
-		} else if ((<any>Object).values(CommandServer).includes(interaction.commandName)) {
-			// Resolve from config. noUncheckedIndexedAccess in tsconfig makes this check mandatory.
-			const srv = key === null ? undefined : SERVERS.get(key);
-			// Check server exists.
-			if (srv === undefined) {
-				await interaction.reply({
-					content: 'Unknown server!',
-					flags: MessageFlags.Ephemeral
-				});
-				return;
+		const command = getCommandFromName(interaction);
+
+		switch (command.type) {
+			case CommandType.UNKNOWN: {
+				await unknownCommand(interaction);
+
+				break;
 			}
-			// Server role check.
-			if (!hasServerRole(interaction, srv)) {
-				await interaction.reply({
-					content: `You don't have access to ${srv.label}!`,
-					flags: MessageFlags.Ephemeral
-				});
-				return;
+			case CommandType.BASE: {
+				// Resolve command.
+				await resolveBasecommand(interaction);
+
+				break;
 			}
-			// Resolve command.
-			await resolveServerCommand(interaction, srv);
-		} else {
-			await interaction.reply({
-				content: `Invalid command! Use /${CommandBase.BASE} to have a list of commands.`,
-				flags: MessageFlags.Ephemeral
-			});
+			case CommandType.SERVER: {
+				// Resolve command.
+				await resolveServerCommand(interaction);
+			}
 		}
 
 		return;
