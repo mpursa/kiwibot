@@ -1,10 +1,11 @@
 # serverbot
 
-Discord bot for starting and stopping game servers via systemd. Friends get four slash commands; the bot gets exactly two sudo rules per game and nothing else.
+Discord bot for starting and stopping game servers via systemd. Friends get five slash commands; the bot gets exactly two sudo rules per game and nothing else.
 
 ## Commands
 
-- `/bot` — checks the bot is up and points at the other commands
+- `/bot` — checks the bot is up and lists the available commands
+- `/list` — state of every game server you have access to
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name>` — stops the unit and names who did it

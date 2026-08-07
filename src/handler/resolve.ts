@@ -13,7 +13,7 @@ export async function resolveBasecommand(interaction: ChatInputCommandInteractio
 			break;
 		}
 		case Command.LIST: {
-			await listCommandResponse(interaction);
+			await listServersResponse(interaction);
 
 			break;
 		}
@@ -85,13 +85,18 @@ export async function unknownCommand(interaction: ChatInputCommandInteraction): 
 	return;
 }
 
-async function listCommandResponse(interaction: ChatInputCommandInteraction): Promise<void> {
-	const lines = COMMANDS.map((command) => `\`/${command.name}\` — ${command.description}`);
-
-	await interaction.reply({
-		content: lines.join('\n'),
-		flags: MessageFlags.Ephemeral
-	});
+async function listServersResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	const visible = [...SERVERS.values()].filter((srv) => hasServerRole(interaction, srv));
+	if (visible.length === 0) {
+		await interaction.reply({
+			content: 'No servers available!',
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+	await interaction.deferReply();
+	const lines = await Promise.all(visible.map(async (srv) => describe(srv, await getState(srv))));
+	await interaction.editReply(lines.join('\n'));
 }
 
 async function existingButUnusedCommand(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -104,11 +109,12 @@ async function existingButUnusedCommand(interaction: ChatInputCommandInteraction
 }
 
 async function baseResponse(interaction: ChatInputCommandInteraction): Promise<void> {
-	await interaction.reply(
-		`SERVERBOT is up and ready! Type /commands to see a list of available commands, type /list to see a list of the available game servers`
-	);
+	const lines = COMMANDS.map((command) => `\`/${command.name}\` — ${command.description}`);
 
-	return;
+	await interaction.reply({
+		content: `**serverbot** is up.\n\n${lines.join('\n')}`,
+		flags: MessageFlags.Ephemeral
+	});
 }
 
 async function startServer(

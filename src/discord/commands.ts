@@ -49,12 +49,12 @@ const serverSelect = (o: SlashCommandStringOption) =>
 export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.BASE,
-		description: 'Check that serverbot is up, tell user man commands',
+		description: 'Check serverbot is up and list available commands',
 		type: CommandType.BASE
 	},
 	{
 		name: Command.LIST,
-		description: 'List all available commands, with description',
+		description: 'List all game servers and their current status',
 		type: CommandType.BASE
 	},
 	{
