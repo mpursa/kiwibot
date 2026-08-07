@@ -49,6 +49,7 @@ npm install
 npm run build        # or: npm run watch
 npm start            # needs a filled-in .env and servers.json
 npm test             # offline unit tests — no Discord connection needed
+npm run testCommand -- status palworld   # run one bot command locally, print the reply
 ```
 
 Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.

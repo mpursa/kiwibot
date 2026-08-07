@@ -19,6 +19,7 @@
 		"watch": "tsc --watch",
 		"start": "node --env-file=.env dist/main.js",
 		"test": "npm run rebuild && tsc -p tests && node --env-file=.env.test --test dist-tests/",
+		"testCommand": "npm run build && tsc -p tests && node --env-file=.env.test dist-tests/run-command.js",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
