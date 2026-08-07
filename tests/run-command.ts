@@ -9,21 +9,16 @@
  *   npm run testCommand -- status palworld
  *   npm run testCommand -- password palworld --no-roles
  *
- * Roles: by default the fake member holds the base role plus the chosen server's
+ * Roles: by default the fake member holds the base role (DEFAULT_ROLE_ID, supplied
+ * by --env-file=.env.test via the npm script) plus the chosen server's
  * roleId/adminRoleId, so commands succeed. --no-roles drops them all to watch the
- * refusal paths. (The base-role gate itself lives in main.ts, not the handlers.)
+ * refusal paths — resolveCommand includes the base-role gate, so what you'll see
+ * first is the outermost "You don't have access" refusal.
  */
 import { MessageFlags } from 'discord.js';
 
 import { SERVERS } from '../dist/core/cfg.js';
-import { CommandType, getCommandFromName } from '../dist/discord/commands.js';
-import {
-	commandNotSupportedResponse,
-	resolveAdminCommand,
-	resolveBasecommand,
-	resolveServerCommand,
-	unknownCommandResponse
-} from '../dist/handler/resolve.js';
+import { resolveCommand } from '../dist/handler/resolve.js';
 import { contentOf, fakeInteraction } from './fakes.js';
 
 const args = process.argv.slice(2);
@@ -57,35 +52,8 @@ console.log(
 		`(roles: ${roles.length === 0 ? 'none' : roles.join(', ')})`
 );
 
-// Same dispatch as main.ts, minus the base-role gate.
 try {
-	switch (getCommandFromName(interaction).type) {
-		case CommandType.UNKNOWN: {
-			await unknownCommandResponse(interaction);
-
-			break;
-		}
-		case CommandType.BASE: {
-			await resolveBasecommand(interaction);
-
-			break;
-		}
-		case CommandType.SERVER: {
-			await resolveServerCommand(interaction);
-
-			break;
-		}
-		case CommandType.ADMIN: {
-			await resolveAdminCommand(interaction);
-
-			break;
-		}
-		default: {
-			await commandNotSupportedResponse(interaction);
-
-			break;
-		}
-	}
+	await resolveCommand(interaction);
 } catch (err) {
 	console.error('Command threw:', (err as Error).message);
 }

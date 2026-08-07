@@ -6,7 +6,7 @@ import { Command, COMMANDS } from '../dist/discord/commands.js';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
-	resolveBasecommand,
+	resolveBaseCommand,
 	resolveServerCommand,
 	unknownCommandResponse
 } from '../dist/handler/resolve.js';
@@ -14,7 +14,13 @@ import { contentOf, fakeInteraction } from './fakes.js';
 
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;
 
-/** The roles a member needs to pass the server (and optionally admin) checks. */
+/**
+ * The roles a member needs to pass the server (and optionally admin) checks.
+ *
+ * @param {{ roleId?: string; adminRoleId?: string }} srv - Target server config.
+ * @param {boolean} admin - Include the admin role too.
+ * @returns {string[]} Role ids for the fake member.
+ */
 function rolesFor(srv: { roleId?: string; adminRoleId?: string }, admin = false): string[] {
 	const roles = [BASE_ROLE];
 	if (srv.roleId !== undefined) roles.push(srv.roleId);
@@ -24,7 +30,7 @@ function rolesFor(srv: { roleId?: string; adminRoleId?: string }, admin = false)
 
 test('/bot lists every registered command', async () => {
 	const { interaction, replies } = fakeInteraction(Command.BASE);
-	await resolveBasecommand(interaction);
+	await resolveBaseCommand(interaction);
 	const content = contentOf(replies[0]);
 	for (const cmd of COMMANDS) {
 		assert.ok(content.includes(`/${cmd.name}`), `missing /${cmd.name}`);
@@ -33,19 +39,19 @@ test('/bot lists every registered command', async () => {
 
 test('/bot_version reports the package version', async () => {
 	const { interaction, replies } = fakeInteraction(Command.BOT_VERSION);
-	await resolveBasecommand(interaction);
+	await resolveBaseCommand(interaction);
 	assert.equal(contentOf(replies[0]), `ServerBot v.${VERSION}`);
 });
 
 test('/list with no roles offers no servers', async () => {
 	const { interaction, replies } = fakeInteraction(Command.LIST);
-	await resolveBasecommand(interaction);
+	await resolveBaseCommand(interaction);
 	assert.equal(contentOf(replies[0]), 'No servers available!');
 });
 
 test('an unregistered base command answers "not implemented"', async () => {
 	const { interaction, replies } = fakeInteraction('something-new');
-	await resolveBasecommand(interaction);
+	await resolveBaseCommand(interaction);
 	assert.match(contentOf(replies[0]), /not been implemented/);
 });
 

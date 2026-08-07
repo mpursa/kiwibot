@@ -24,7 +24,13 @@ const MAX_STARTUP_MS = 840_000;
 export const SERVERS = loadServers(new URL('../../servers.json', import.meta.url));
 export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
 
-/** Project version from package.json. Display-only, so failures soft-fail to 'unknown'. */
+/**
+ * Project version from package.json. Display-only, so failures soft-fail
+ * to 'unknown' instead of refusing to boot.
+ *
+ * @param {URL} path - package.json location, relative to the compiled file.
+ * @returns {string} The version field, or 'unknown'.
+ */
 function loadVersion(path: URL): string {
 	try {
 		const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
@@ -33,11 +39,19 @@ function loadVersion(path: URL): string {
 			if (typeof v === 'string' && v !== '') return v;
 		}
 	} catch {
-		// fall through
+		// Fall through.
 	}
 	return 'unknown';
 }
 
+/**
+ * A mandatory non-empty string field, or a config error naming it.
+ *
+ * @param {Record<string, unknown>} o - Parsed server entry.
+ * @param {string} key - Field to read.
+ * @param {string} where - Server key, for the error message.
+ * @returns {string}
+ */
 function requireString(o: Record<string, unknown>, key: string, where: string): string {
 	const v = o[key];
 	if (typeof v !== 'string' || v.trim() === '')
@@ -45,6 +59,14 @@ function requireString(o: Record<string, unknown>, key: string, where: string): 
 	return v;
 }
 
+/**
+ * Validates one servers.json entry. JSON.parse returns any; this boundary is
+ * what makes every field trustworthy downstream.
+ *
+ * @param {string} key - Server key, used in error messages.
+ * @param {unknown} raw - Unvalidated entry.
+ * @returns {ServerConfig} The validated entry, defaults applied.
+ */
 function parseServer(key: string, raw: unknown): ServerConfig {
 	if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
 		throw new Error(`servers.json: ${key} must be an object`);
@@ -105,6 +127,14 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 	};
 }
 
+/**
+ * Loads and validates servers.json. A malformed file fails at startup with
+ * the offending field named, instead of surfacing as undefined inside a
+ * systemctl invocation.
+ *
+ * @param {URL} path - servers.json location, relative to the compiled file.
+ * @returns {Servers} Immutable map of server key to validated config.
+ */
 export function loadServers(path: URL): Servers {
 	let parsed: unknown;
 	try {
@@ -129,6 +159,12 @@ export function loadServers(path: URL): Servers {
 	return map;
 }
 
+/**
+ * A mandatory environment variable, or a startup error naming it.
+ *
+ * @param {string} name - Variable name.
+ * @returns {string} Its non-empty value.
+ */
 export function requireEnv(name: string): string {
 	const v = process.env[name];
 	if (v === undefined || v === '') throw new Error(`Missing environment variable ${name}`);

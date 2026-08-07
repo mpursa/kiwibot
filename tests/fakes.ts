@@ -20,6 +20,10 @@ export interface FakeInteractionHandle {
  * The handlers only touch a handful of interaction properties, so a plain
  * object stands in for Discord — no gateway connection involved. The roles
  * cache is a Set because the role checks only ever call .has().
+ *
+ * @param {string} commandName - Command being invoked, without the slash.
+ * @param {FakeInteractionOptions} options - Server option and member roles.
+ * @returns {FakeInteractionHandle} The interaction plus its recorded replies.
  */
 export function fakeInteraction(
 	commandName: string,
@@ -56,7 +60,12 @@ export function fakeInteraction(
 	return { interaction: fake as unknown as ChatInputCommandInteraction, replies };
 }
 
-/** Extracts the text of a reply, whether it was a bare string or { content }. */
+/**
+ * Extracts the text of a reply, whether it was a bare string or { content }.
+ *
+ * @param {unknown} reply - A recorded reply()/editReply() argument.
+ * @returns {string} The reply text, or '' when there is none.
+ */
 export function contentOf(reply: unknown): string {
 	if (typeof reply === 'string') return reply;
 	if (typeof reply === 'object' && reply !== null && 'content' in reply) {
@@ -66,7 +75,12 @@ export function contentOf(reply: unknown): string {
 	return '';
 }
 
-/** A ServerConfig fixture, independent of the local servers.json. */
+/**
+ * A ServerConfig fixture, independent of the local servers.json.
+ *
+ * @param {Partial<ServerConfig>} overrides - Fields to override on the fixture.
+ * @returns {ServerConfig}
+ */
 export function makeServer(overrides: Partial<ServerConfig> = {}): ServerConfig {
 	return {
 		label: 'Testworld',

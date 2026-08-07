@@ -1,15 +1,8 @@
-import { Client, GatewayIntentBits, MessageFlags, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 
 import { SERVERS, requireEnv } from './core/cfg.js';
-import {
-	commandNotSupportedResponse,
-	resolveAdminCommand,
-	resolveBasecommand,
-	resolveServerCommand,
-	unknownCommandResponse
-} from './handler/resolve.js';
-import { CommandType, discordCommands, getCommandFromName } from './discord/commands.js';
-import { hasDefaultRole } from './discord/roles.js';
+import { resolveCommand } from './handler/resolve.js';
+import { discordCommands } from './discord/commands.js';
 import { sudoAllows } from './server/state.js';
 
 const TOKEN = requireEnv('DISCORD_TOKEN');
@@ -38,47 +31,14 @@ client.once('clientReady', async (c) => {
 	);
 });
 
+/**
+ * On chat command received.
+ */
 client.on('interactionCreate', async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
 
 	try {
-		// Base role check.
-		if (!hasDefaultRole(interaction)) {
-			await interaction.reply({
-				content: "You don't have access to ServerBot!",
-				flags: MessageFlags.Ephemeral
-			});
-			return;
-		}
-
-		switch (getCommandFromName(interaction).type) {
-			case CommandType.UNKNOWN: {
-				await unknownCommandResponse(interaction);
-
-				break;
-			}
-			case CommandType.BASE: {
-				await resolveBasecommand(interaction);
-
-				break;
-			}
-			case CommandType.SERVER: {
-				await resolveServerCommand(interaction);
-
-				break;
-			}
-			case CommandType.ADMIN: {
-				await resolveAdminCommand(interaction);
-
-				break;
-			}
-			default: {
-				await commandNotSupportedResponse(interaction);
-				break;
-			}
-		}
-
-		return;
+		await resolveCommand(interaction);
 	} catch (err) {
 		console.error(err);
 		const msg = `Command failed: \`${String((err as Error).message).slice(0, 200)}\``;
@@ -90,6 +50,8 @@ client.on('interactionCreate', async (interaction) => {
 			console.error('Could not report failure to Discord:', replyErr);
 		}
 	}
+
+	return;
 });
 
 await client.login(TOKEN);

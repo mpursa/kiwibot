@@ -7,7 +7,13 @@ import { pathToFileURL } from 'node:url';
 
 import { loadServers } from '../dist/core/cfg.js';
 
-/** Writes a config object to a temp file and returns its URL, like the real servers.json. */
+/**
+ * Writes a config object to a temp file and returns its URL, like the real
+ * servers.json.
+ *
+ * @param {unknown} config - Config object to serialize.
+ * @returns {URL} file:// URL loadServers can read.
+ */
 function fixture(config: unknown): URL {
 	const dir = mkdtempSync(join(tmpdir(), 'serverbot-test-'));
 	const file = join(dir, 'servers.json');
