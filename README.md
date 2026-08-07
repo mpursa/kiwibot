@@ -1,18 +1,20 @@
 # serverbot
 
-Discord bot for starting and stopping game servers via systemd. Friends get five slash commands; the bot gets exactly two sudo rules per game and nothing else.
+Discord bot for starting and stopping game servers via systemd. Friends get seven slash commands; the bot gets exactly two sudo rules per game and nothing else.
 
 ## Commands
 
-- `/bot` — checks the bot is up and lists the available commands
+- `/bot` — checks the bot is up and lists the available commands (ephemeral)
 - `/list` — state of every game server you have access to
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name>` — stops the unit and names who did it
+- `/password server:<name>` — the server's join password, if one is configured (ephemeral)
+- `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
 
 The `server` option is required and is a dropdown built from `servers.json`, so no free-text unit names ever reach `systemctl`. Refusals are ephemeral; successful actions are visible to the channel, which doubles as an audit trail.
 
-Access has two tiers: **every** command requires the base role (`DEFAULT_ROLE_ID` from `.env`); a server whose config sets `roleId` requires that role in addition.
+Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_ID` from `.env`); a server whose config sets `roleId` requires that role in addition; `/admin` further requires the server's `adminRoleId`.
 
 ## Layout
 
@@ -23,9 +25,9 @@ src/
 │   └── cfg.ts              types, validated servers.json loader, env access
 ├── discord/
 │   ├── commands.ts         slash-command definitions and command-name enums
-│   └── roles.ts            role checks (base role + per-server role)
+│   └── roles.ts            role checks (base, per-server, admin)
 ├── handler/
-│   └── resolve.ts          command handlers — /bot reply, status/start/stop flows
+│   └── resolve.ts          command handlers — base, server and admin command flows
 └── server/
     └── state.ts            unit state, socket check, start/stop via sudo
 ```
@@ -33,7 +35,7 @@ src/
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes) and optional `roleId` (an *additional* role required for that server, on top of the base role)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), and `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role)
 
 Both files are per-deployment and gitignored.
 

@@ -17,7 +17,7 @@ Quick guide from zero to working slash commands. You need **Manage Server** perm
 Enable Discord's Developer Mode first: **User Settings → Advanced → Developer Mode**.
 
 - Right-click your server icon → **Copy Server ID** → `GUILD_ID`.
-- Create (or pick) the role that gates the bot, e.g. `@gameservers`. Server Settings → Roles → right-click the role → **Copy Role ID** → `DEFAULT_ROLE_ID`. Every command requires this role; a `roleId` in `servers.json` is an _additional_ requirement on top of it.
+- Create (or pick) the role that gates the bot, e.g. `@gameservers`. Server Settings → Roles → right-click the role → **Copy Role ID** → `DEFAULT_ROLE_ID`. Every command requires this role; a `roleId` in `servers.json` is an _additional_ requirement on top of it, and an `adminRoleId` further gates that server's `/admin` command.
 - Assign the role to the people who may control the servers.
 
 ## 3. Invite the bot
@@ -31,7 +31,7 @@ https://discord.com/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot+application
 - `bot` adds the bot user; `applications.commands` lets it register slash commands. Missing the second is the classic "bot is in the server but `/` shows nothing" mistake — if that happens, just open the URL again and re-authorize.
 - `permissions=3072` is **View Channels + Send Messages**, which is all it needs. Do not grant Administrator or any Manage permission — replies travel through the interaction system, not ordinary message sending.
 
-The bot appears in the member list **offline**. That's expected — it comes online when the process on the VPS starts. On startup it registers `/bot`, `/status`, `/start`, `/stop`; guild-scoped commands appear within seconds.
+The bot appears in the member list **offline**. That's expected — it comes online when the process on the VPS starts. On startup it registers its commands (`/bot`, `/list`, `/password`, `/admin`, `/status`, `/start`, `/stop`); guild-scoped commands appear within seconds.
 
 ## 4. Lock it down (recommended)
 
