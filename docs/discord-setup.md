@@ -31,7 +31,7 @@ https://discord.com/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot+application
 - `bot` adds the bot user; `applications.commands` lets it register slash commands. Missing the second is the classic "bot is in the server but `/` shows nothing" mistake — if that happens, just open the URL again and re-authorize.
 - `permissions=3072` is **View Channels + Send Messages**, which is all it needs. Do not grant Administrator or any Manage permission — replies travel through the interaction system, not ordinary message sending.
 
-The bot appears in the member list **offline**. That's expected — it comes online when the process on the VPS starts. On startup it registers its commands (`/bot`, `/list`, `/password`, `/admin`, `/status`, `/start`, `/stop`); guild-scoped commands appear within seconds.
+The bot appears in the member list **offline**. That's expected — it comes online when the process on the VPS starts. On startup it registers its commands (`/bot`, `/bot_version`, `/list`, `/password`, `/admin`, `/status`, `/start`, `/stop`); guild-scoped commands appear within seconds.
 
 ## 4. Lock it down (recommended)
 
