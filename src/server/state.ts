@@ -82,7 +82,7 @@ export async function waitFor(srv: ServerConfig, target: ServerState): Promise<b
 export function describe(srv: ServerConfig, state: ServerState): string {
 	switch (state) {
 		case 'running':
-			return `🟢 **${srv.label}** · \`${srv.address}\``;
+			return `🟢 **${srv.label}** · \`${srv.address}:${srv.port}\``;
 		case 'starting':
 			return `🟡 **${srv.label}** — starting, give it a minute`;
 		case 'stopped':
