@@ -1,0 +1,21 @@
+{
+	"plainworld": {
+		"label": "Plainworld",
+		"unit": "serverbot-test-plainworld",
+		"address": "plain.test.example.com",
+		"port": 8211,
+		"protocol": "udp"
+	},
+	"adminworld": {
+		"label": "Adminworld",
+		"unit": "serverbot-test-adminworld",
+		"address": "admin.test.example.com",
+		"port": 25565,
+		"protocol": "tcp",
+		"startupMs": 120000,
+		"password": "join-password",
+		"adminInfo": "Admin password: test_admin_pw\nAdmin console URL: https://admin.test.example.com",
+		"roleId": "200000000000000002",
+		"adminRoleId": "300000000000000003"
+	}
+}

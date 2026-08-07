@@ -1,10 +1,11 @@
 # serverbot
 
-Discord bot for starting and stopping game servers via systemd. Friends get seven slash commands; the bot gets exactly two sudo rules per game and nothing else.
+Discord bot for starting and stopping game servers via systemd. The bot gets exactly two sudo rules per game and nothing else.
 
 ## Commands
 
-- `/bot` — checks the bot is up and lists the available commands (ephemeral)
+- `/bot` — checks the bot is up and lists the available commands
+- `/bot_version` — the running serverbot version (ephemeral)
 - `/list` — state of every game server you have access to
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
@@ -20,14 +21,14 @@ Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_
 
 ```
 src/
-├── main.ts                 entry point — Discord client, base role gate, command dispatch
+├── main.ts                 entry point — Discord client, command registration, error reporting
 ├── core/
 │   └── cfg.ts              types, validated servers.json loader, env access
 ├── discord/
 │   ├── commands.ts         slash-command definitions and command-name enums
 │   └── roles.ts            role checks (base, per-server, admin)
 ├── handler/
-│   └── resolve.ts          command handlers — base, server and admin command flows
+│   └── resolve.ts          base role gate, command dispatch, and all command handlers
 └── server/
     └── state.ts            unit state, socket check, start/stop via sudo
 ```
@@ -47,9 +48,13 @@ Both files are per-deployment and gitignored.
 npm install
 npm run build        # or: npm run watch
 npm start            # needs a filled-in .env and servers.json
+npm test             # offline unit tests — no Discord connection needed
+npm run testCommand -- status palworld   # run one bot command locally, print the reply
 ```
 
 Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.
+
+Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](tests/tsconfig.json) into `dist-tests/` and run by Node's built-in runner. They import the built `dist/` (which is why the main tsconfig emits declarations) and talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset). When renaming or deleting test files, `rm -rf dist-tests` first — `tsc` never removes stale output, and orphaned `*.test.js` files would keep running.
 
 ## Guides
 

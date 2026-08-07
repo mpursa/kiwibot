@@ -16,6 +16,7 @@ export enum CommandType {
 export enum Command {
 	UNKNOWN = 'unknown',
 	BASE = 'bot',
+	BOT_VERSION = 'bot_version',
 	LIST = 'list',
 	SERVER_ADMIN = 'admin',
 	SERVER_PW = 'password',
@@ -42,6 +43,13 @@ const SERVER_CHOICES = [...SERVERS].map(([value, srv]) => ({
 	value
 }));
 
+/**
+ * The required 'server' option shared by every server-type command. Choices
+ * come from the config, so free text never reaches the handlers.
+ *
+ * @param {SlashCommandStringOption} o - Option builder passed by discord.js.
+ * @returns {SlashCommandStringOption} The configured option.
+ */
 const serverSelect = (o: SlashCommandStringOption) =>
 	o
 		.setName('server')
@@ -49,10 +57,18 @@ const serverSelect = (o: SlashCommandStringOption) =>
 		.setRequired(true)
 		.addChoices(...SERVER_CHOICES);
 
+/**
+ * Actual bot command list.
+ */
 export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.BASE,
 		description: 'Check serverbot is up and list available commands',
+		type: CommandType.BASE
+	},
+	{
+		name: Command.BOT_VERSION,
+		description: 'Show the current serverbot version',
 		type: CommandType.BASE
 	},
 	{
@@ -98,6 +114,12 @@ export const discordCommands = COMMANDS.map((cmd) => {
 	return builder.toJSON();
 });
 
+/**
+ * Looks the invoked command up in the registry.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {FullCommand} The matching entry, or the unknown sentinel.
+ */
 export function getCommandFromName(interaction: ChatInputCommandInteraction): FullCommand {
 	return COMMANDS.find((command) => command.name === interaction.commandName) ?? UNKNOWN_COMMAND;
 }

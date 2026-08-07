@@ -1,14 +1,73 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { ServerConfig, SERVERS } from '../core/cfg.js';
-import { Command, COMMANDS } from '../discord/commands.js';
+import { ServerConfig, SERVERS, VERSION } from '../core/cfg.js';
+import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
-import { hasAdminRole, hasServerRole } from '../discord/roles.js';
+import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.js';
 
-export async function resolveBasecommand(interaction: ChatInputCommandInteraction): Promise<void> {
+/**
+ * Base resolver for all commands.
+ * Depending on the command type call the specific resolver function.
+ * First check for the base role.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
+export async function resolveCommand(interaction: ChatInputCommandInteraction): Promise<void> {
+	// Base role check.
+	if (!hasDefaultRole(interaction)) {
+		await interaction.reply({
+			content: "You don't have access to ServerBot!",
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+
+	switch (getCommandFromName(interaction).type) {
+		case CommandType.UNKNOWN: {
+			await unknownCommandResponse(interaction);
+
+			break;
+		}
+		case CommandType.BASE: {
+			await resolveBaseCommand(interaction);
+
+			break;
+		}
+		case CommandType.SERVER: {
+			await resolveServerCommand(interaction);
+
+			break;
+		}
+		case CommandType.ADMIN: {
+			await resolveAdminCommand(interaction);
+
+			break;
+		}
+		default: {
+			await commandNotSupportedResponse(interaction);
+			break;
+		}
+	}
+
+	return;
+}
+
+/**
+ * Resolver for base-type commands.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
+export async function resolveBaseCommand(interaction: ChatInputCommandInteraction): Promise<void> {
 	switch (interaction.commandName) {
 		case Command.BASE: {
 			await baseResponse(interaction);
+
+			break;
+		}
+		case Command.BOT_VERSION: {
+			await versionResponse(interaction);
 
 			break;
 		}
@@ -25,6 +84,13 @@ export async function resolveBasecommand(interaction: ChatInputCommandInteractio
 	}
 }
 
+/**
+ * Resolver for server-type commands: resolves the server option, checks the
+ * server role, then dispatches.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 export async function resolveServerCommand(
 	interaction: ChatInputCommandInteraction
 ): Promise<void> {
@@ -77,6 +143,13 @@ export async function resolveServerCommand(
 	}
 }
 
+/**
+ * Resolver for admin-type commands: resolves the server option, requires the
+ * server to define admin mode and the member to hold the admin role.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 export async function resolveAdminCommand(interaction: ChatInputCommandInteraction): Promise<void> {
 	// Check server exists.
 	const srv = getServerFromOptions(interaction);
@@ -117,6 +190,12 @@ export async function resolveAdminCommand(interaction: ChatInputCommandInteracti
 	}
 }
 
+/**
+ * Ephemeral reply for a command that is not in the registry.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 export async function unknownCommandResponse(
 	interaction: ChatInputCommandInteraction
 ): Promise<void> {
@@ -128,6 +207,13 @@ export async function unknownCommandResponse(
 	return;
 }
 
+/**
+ * Lists the live state of every server the member may control. Defers first:
+ * each server costs two subprocess spawns.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 async function listServersResponse(interaction: ChatInputCommandInteraction): Promise<void> {
 	const visible = [...SERVERS.values()].filter((srv) => hasServerRole(interaction, srv));
 	if (visible.length === 0) {
@@ -142,6 +228,12 @@ async function listServersResponse(interaction: ChatInputCommandInteraction): Pr
 	await interaction.editReply(lines.join('\n'));
 }
 
+/**
+ * Ephemeral fallback for a registered command with no handler yet.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 async function existingButUnusedCommandResponse(
 	interaction: ChatInputCommandInteraction
 ): Promise<void> {
@@ -153,6 +245,13 @@ async function existingButUnusedCommandResponse(
 	return;
 }
 
+/**
+ * Ephemeral reply with the server's admin info text, when configured.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
 async function adminInfoResponse(
 	interaction: ChatInputCommandInteraction,
 	srv: ServerConfig
@@ -168,6 +267,12 @@ async function adminInfoResponse(
 	return;
 }
 
+/**
+ * Ephemeral fallback for a command type the dispatcher does not handle.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 export async function commandNotSupportedResponse(
 	interaction: ChatInputCommandInteraction
 ): Promise<void> {
@@ -179,6 +284,26 @@ export async function commandNotSupportedResponse(
 	return;
 }
 
+/**
+ * Ephemeral reply with the running serverbot version.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
+async function versionResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	await interaction.reply({
+		content: `ServerBot v.${VERSION}`,
+		flags: MessageFlags.Ephemeral
+	});
+}
+
+/**
+ * Ephemeral reply listing every command with its description, built from
+ * COMMANDS so it cannot go stale.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
 async function baseResponse(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lines = COMMANDS.map((command) => `\`/${command.name}\` — ${command.description}`);
 
@@ -188,6 +313,13 @@ async function baseResponse(interaction: ChatInputCommandInteraction): Promise<v
 	});
 }
 
+/**
+ * Ephemeral reply with the server's join password, when configured.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
 async function passwordResponse(
 	interaction: ChatInputCommandInteraction,
 	srv: ServerConfig
@@ -201,6 +333,14 @@ async function passwordResponse(
 	});
 }
 
+/**
+ * Starts the unit and edits the reply as it progresses. Defers first: it
+ * spawns subprocesses and can wait up to startupMs for the socket to open.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
 async function startServer(
 	interaction: ChatInputCommandInteraction,
 	srv: ServerConfig
@@ -224,6 +364,13 @@ async function startServer(
 	return;
 }
 
+/**
+ * Stops the unit and names who asked. Defers first, same reason as startServer.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
 async function stopServer(
 	interaction: ChatInputCommandInteraction,
 	srv: ServerConfig
@@ -245,8 +392,14 @@ async function stopServer(
 	return;
 }
 
+/**
+ * Resolves the 'server' option against the config. noUncheckedIndexedAccess
+ * in tsconfig makes the resulting undefined-check mandatory at every caller.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {ServerConfig | undefined} The configured server, if the option names one.
+ */
 function getServerFromOptions(interaction: ChatInputCommandInteraction): ServerConfig | undefined {
 	const key = interaction.options.getString('server');
-	// Resolve from config. noUncheckedIndexedAccess in tsconfig makes this check mandatory.
 	return key === null ? undefined : SERVERS.get(key);
 }
