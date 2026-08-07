@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 export type Protocol = 'tcp' | 'udp';
 
@@ -21,7 +22,12 @@ const DEFAULT_STARTUP_MS = 120_000;
 // Discord interaction tokens expire after 15 minutes; the final editReply after
 // waitFor() must land before that, so cap the configurable wait at 14 minutes.
 const MAX_STARTUP_MS = 840_000;
-export const SERVERS = loadServers(new URL('../../servers.json', import.meta.url));
+const SERVERS_PATH = process.env['SERVERS_PATH'];
+export const SERVERS = loadServers(
+	SERVERS_PATH !== undefined && SERVERS_PATH !== ''
+		? pathToFileURL(SERVERS_PATH)
+		: new URL('../../servers.json', import.meta.url)
+);
 export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
 
 /**

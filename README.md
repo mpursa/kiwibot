@@ -54,7 +54,7 @@ npm run testCommand -- status palworld   # run one bot command locally, print th
 
 Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.
 
-Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](tests/tsconfig.json) into `dist-tests/` and run by Node's built-in runner. They import the built `dist/` (which is why the main tsconfig emits declarations) and talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved; `.env.test` supplies a dummy `DEFAULT_ROLE_ID`. A `servers.json` must exist at the repo root (any valid one), since `cfg.ts` loads it at import. When renaming or deleting test files, `rm -rf dist-tests` first — `tsc` never removes stale output, and orphaned `*.test.js` files would keep running.
+Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](tests/tsconfig.json) into `dist-tests/` and run by Node's built-in runner. They import the built `dist/` (which is why the main tsconfig emits declarations) and talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset). When renaming or deleting test files, `rm -rf dist-tests` first — `tsc` never removes stale output, and orphaned `*.test.js` files would keep running.
 
 ## Guides
 
