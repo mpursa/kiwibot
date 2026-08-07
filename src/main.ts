@@ -1,7 +1,13 @@
 import { Client, GatewayIntentBits, MessageFlags, REST, Routes } from 'discord.js';
 
 import { SERVERS, requireEnv } from './core/cfg.js';
-import { resolveBasecommand, resolveServerCommand, unknownCommand } from './handler/resolve.js';
+import {
+	commandNotSupportedResponse,
+	resolveAdminCommand,
+	resolveBasecommand,
+	resolveServerCommand,
+	unknownCommandResponse
+} from './handler/resolve.js';
 import { CommandType, discordCommands, getCommandFromName } from './discord/commands.js';
 import { hasDefaultRole } from './discord/roles.js';
 import { sudoAllows } from './server/state.js';
@@ -45,23 +51,30 @@ client.on('interactionCreate', async (interaction) => {
 			return;
 		}
 
-		const command = getCommandFromName(interaction);
-
-		switch (command.type) {
+		switch (getCommandFromName(interaction).type) {
 			case CommandType.UNKNOWN: {
-				await unknownCommand(interaction);
+				await unknownCommandResponse(interaction);
 
 				break;
 			}
 			case CommandType.BASE: {
-				// Resolve command.
 				await resolveBasecommand(interaction);
 
 				break;
 			}
 			case CommandType.SERVER: {
-				// Resolve command.
 				await resolveServerCommand(interaction);
+
+				break;
+			}
+			case CommandType.ADMIN: {
+				await resolveAdminCommand(interaction);
+
+				break;
+			}
+			default: {
+				await commandNotSupportedResponse(interaction);
+				break;
 			}
 		}
 
@@ -69,8 +82,7 @@ client.on('interactionCreate', async (interaction) => {
 	} catch (err) {
 		console.error(err);
 		const msg = `Command failed: \`${String((err as Error).message).slice(0, 200)}\``;
-		// The report itself can fail (e.g. the interaction token expired). Swallow
-		// that: an unhandled rejection here would take down the whole process.
+		// The report itself can fail (e.g. the interaction token expired).
 		try {
 			if (interaction.deferred) await interaction.editReply(msg);
 			else if (!interaction.replied) await interaction.reply(msg);

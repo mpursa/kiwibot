@@ -9,13 +9,16 @@ import { SERVERS } from '../core/cfg.js';
 export enum CommandType {
 	UNKNOWN,
 	BASE,
-	SERVER
+	SERVER,
+	ADMIN
 }
 
 export enum Command {
 	UNKNOWN = 'unknown',
 	BASE = 'bot',
 	LIST = 'list',
+	SERVER_ADMIN = 'admin',
+	SERVER_PW = 'password',
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
 	SERVER_STOP = 'stop'
@@ -56,6 +59,18 @@ export const COMMANDS: FullCommand[] = [
 		name: Command.LIST,
 		description: 'List all game servers and their current status',
 		type: CommandType.BASE
+	},
+	{
+		name: Command.SERVER_ADMIN,
+		description: 'Show specific server admin mode info',
+		type: CommandType.ADMIN,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_PW,
+		description: 'Show specific server connection password',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
 	},
 	{
 		name: Command.SERVER_STATUS,
