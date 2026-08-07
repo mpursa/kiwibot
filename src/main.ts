@@ -45,7 +45,7 @@ client.on('interactionCreate', async (interaction) => {
 		// Base role check.
 		if (!hasDefaultRole(interaction)) {
 			await interaction.reply({
-				content: "You don't have access to serverbot!",
+				content: "You don't have access to ServerBot!",
 				flags: MessageFlags.Ephemeral
 			});
 			return;

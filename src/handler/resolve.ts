@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { ServerConfig, SERVERS } from '../core/cfg.js';
+import { ServerConfig, SERVERS, VERSION } from '../core/cfg.js';
 import { Command, COMMANDS } from '../discord/commands.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
 import { hasAdminRole, hasServerRole } from '../discord/roles.js';
@@ -9,6 +9,11 @@ export async function resolveBasecommand(interaction: ChatInputCommandInteractio
 	switch (interaction.commandName) {
 		case Command.BASE: {
 			await baseResponse(interaction);
+
+			break;
+		}
+		case Command.BOT_VERSION: {
+			await versionResponse(interaction);
 
 			break;
 		}
@@ -177,6 +182,13 @@ export async function commandNotSupportedResponse(
 	});
 
 	return;
+}
+
+async function versionResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	await interaction.reply({
+		content: `ServerBot v.${VERSION}`,
+		flags: MessageFlags.Ephemeral
+	});
 }
 
 async function baseResponse(interaction: ChatInputCommandInteraction): Promise<void> {

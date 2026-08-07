@@ -16,6 +16,7 @@ export enum CommandType {
 export enum Command {
 	UNKNOWN = 'unknown',
 	BASE = 'bot',
+	BOT_VERSION = 'bot_version',
 	LIST = 'list',
 	SERVER_ADMIN = 'admin',
 	SERVER_PW = 'password',
@@ -53,6 +54,11 @@ export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.BASE,
 		description: 'Check serverbot is up and list available commands',
+		type: CommandType.BASE
+	},
+	{
+		name: Command.BOT_VERSION,
+		description: 'Show the current serverbot version',
 		type: CommandType.BASE
 	},
 	{

@@ -22,6 +22,21 @@ const DEFAULT_STARTUP_MS = 120_000;
 // waitFor() must land before that, so cap the configurable wait at 14 minutes.
 const MAX_STARTUP_MS = 840_000;
 export const SERVERS = loadServers(new URL('../../servers.json', import.meta.url));
+export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
+
+/** Project version from package.json. Display-only, so failures soft-fail to 'unknown'. */
+function loadVersion(path: URL): string {
+	try {
+		const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+		if (typeof parsed === 'object' && parsed !== null) {
+			const v = (parsed as Record<string, unknown>)['version'];
+			if (typeof v === 'string' && v !== '') return v;
+		}
+	} catch {
+		// fall through
+	}
+	return 'unknown';
+}
 
 function requireString(o: Record<string, unknown>, key: string, where: string): string {
 	const v = o[key];
