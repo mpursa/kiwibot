@@ -17,7 +17,7 @@ Quick guide from zero to working slash commands. You need **Manage Server** perm
 Enable Discord's Developer Mode first: **User Settings → Advanced → Developer Mode**.
 
 - Right-click your server icon → **Copy Server ID** → `GUILD_ID`.
-- Create (or pick) the role that gates the bot, e.g. `@gameservers`. Server Settings → Roles → right-click the role → **Copy Role ID** → `DEFAULT_ROLE_ID`. Every command requires this role; a `roleId` in `servers.json` is an *additional* requirement on top of it.
+- Create (or pick) the role that gates the bot, e.g. `@gameservers`. Server Settings → Roles → right-click the role → **Copy Role ID** → `DEFAULT_ROLE_ID`. Every command requires this role; a `roleId` in `servers.json` is an _additional_ requirement on top of it.
 - Assign the role to the people who may control the servers.
 
 ## 3. Invite the bot
@@ -37,10 +37,10 @@ The bot appears in the member list **offline**. That's expected — it comes onl
 
 **Server Settings → Integrations → serverbot → Manage**:
 
-- **Channels**: turn off *All Channels*, add the one channel the bot should work in. Everywhere else, the commands disappear from the `/` picker.
+- **Channels**: turn off _All Channels_, add the one channel the bot should work in. Everywhere else, the commands disappear from the `/` picker.
 - **Roles/Members**: restrict who is offered the commands. People without the role would be refused on execution anyway (ephemerally), but hiding the commands is tidier.
 
-The permission profile shown on the bot's role may list extra "granted" entries (Create Invite, Attach Files, …) — those come from the `@everyone` role's server defaults, not from the bot's own role. Harmless; a channel permission override on the serverbot role can deny any of them (e.g. *Mention @everyone*) if you want.
+The permission profile shown on the bot's role may list extra "granted" entries (Create Invite, Attach Files, …) — those come from the `@everyone` role's server defaults, not from the bot's own role. Harmless; a channel permission override on the serverbot role can deny any of them (e.g. _Mention @everyone_) if you want.
 
 ## Troubleshooting
 
