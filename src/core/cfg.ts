@@ -9,7 +9,10 @@ export interface ServerConfig {
 	readonly protocol: Protocol;
 	readonly address: string;
 	readonly startupMs: number;
+	readonly password?: string;
+	readonly adminInfo?: string;
 	readonly roleId?: string;
+	readonly adminRoleId?: string;
 }
 
 export type Servers = ReadonlyMap<string, ServerConfig>;
@@ -53,9 +56,24 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		);
 	}
 
+	const password = o['password'];
+	if (password !== undefined && typeof password !== 'string') {
+		throw new Error(`servers.json: ${key}.password must be a string if present`);
+	}
+
+	const adminInfo = o['adminInfo'];
+	if (adminInfo !== undefined && typeof adminInfo !== 'string') {
+		throw new Error(`servers.json: ${key}.adminInfo must be a string if present`);
+	}
+
 	const roleId = o['roleId'];
 	if (roleId !== undefined && typeof roleId !== 'string') {
 		throw new Error(`servers.json: ${key}.roleId must be a string if present`);
+	}
+
+	const adminRoleId = o['adminRoleId'];
+	if (adminRoleId !== undefined && typeof adminRoleId !== 'string') {
+		throw new Error(`servers.json: ${key}.adminRoleId must be a string if present`);
 	}
 
 	return {
@@ -65,7 +83,10 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		port,
 		protocol,
 		startupMs: typeof startupRaw === 'number' ? startupRaw : DEFAULT_STARTUP_MS,
-		...(typeof roleId === 'string' ? { roleId } : {})
+		...(typeof password === 'string' ? { password } : {}),
+		...(typeof adminInfo === 'string' ? { adminInfo } : {}),
+		...(typeof roleId === 'string' ? { roleId } : {}),
+		...(typeof adminRoleId === 'string' ? { adminRoleId } : {})
 	};
 }
 

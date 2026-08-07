@@ -104,6 +104,7 @@ sudo journalctl -u serverbot -f
   ```
 
   must print `NoNewPrivs: 0`.
+
 - One real `/start` from Discord — that exercises the full path (sandbox → sudo → systemctl), which no shell test can.
 
 ## Updating

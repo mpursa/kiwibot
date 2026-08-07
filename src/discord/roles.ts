@@ -24,3 +24,14 @@ export function hasServerRole(
 		hasDefaultRole(interaction) && (srv.roleId === undefined || hasRole(interaction, srv.roleId))
 	);
 }
+
+/**
+ * Admin role id for given server.
+ */
+export function hasAdminRole(interaction: ChatInputCommandInteraction, srv: ServerConfig): boolean {
+	return (
+		hasDefaultRole(interaction) &&
+		hasServerRole(interaction, srv) &&
+		(srv.adminRoleId === undefined || hasRole(interaction, srv.adminRoleId))
+	);
+}
