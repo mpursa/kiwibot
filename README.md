@@ -48,9 +48,12 @@ Both files are per-deployment and gitignored.
 npm install
 npm run build        # or: npm run watch
 npm start            # needs a filled-in .env and servers.json
+npm test             # offline unit tests — no Discord connection needed
 ```
 
 Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.
+
+Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](tests/tsconfig.json) into `dist-tests/` and run by Node's built-in runner. They import the built `dist/` (which is why the main tsconfig emits declarations) and talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved; `.env.test` supplies a dummy `DEFAULT_ROLE_ID`. A `servers.json` must exist at the repo root (any valid one), since `cfg.ts` loads it at import. When renaming or deleting test files, `rm -rf dist-tests` first — `tsc` never removes stale output, and orphaned `*.test.js` files would keep running.
 
 ## Guides
 

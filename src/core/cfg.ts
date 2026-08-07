@@ -105,7 +105,7 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 	};
 }
 
-function loadServers(path: URL): Servers {
+export function loadServers(path: URL): Servers {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(readFileSync(path, 'utf8'));

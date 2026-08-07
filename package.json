@@ -14,8 +14,11 @@
 	},
 	"scripts": {
 		"build": "tsc",
+		"clean": "node -e \"['dist', 'dist-tests'].forEach((d) => fs.rmSync(d, { recursive: true, force: true }))\"",
+		"rebuild": "npm run clean && npm run build",
 		"watch": "tsc --watch",
 		"start": "node --env-file=.env dist/main.js",
+		"test": "npm run rebuild && tsc -p tests && node --env-file=.env.test --test dist-tests/",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
