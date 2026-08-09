@@ -10,6 +10,7 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name>` — stops the unit and names who did it
+- `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
 - `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
 

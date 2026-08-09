@@ -73,6 +73,18 @@ test('server commands refuse a member without the server role', async () => {
 	assert.equal(contentOf(replies[0]), `You don't have access to ${srv.label}!`);
 });
 
+test('/address answers with host:port for a permitted member', async () => {
+	const first = [...SERVERS.entries()][0];
+	assert.ok(first);
+	const [key, srv] = first;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_ADDRESS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.ok(contentOf(replies[0]).includes(`${srv.address}:${srv.port}`));
+});
+
 test('/password answers a permitted member', async () => {
 	const first = [...SERVERS.entries()][0];
 	assert.ok(first);

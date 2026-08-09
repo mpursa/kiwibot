@@ -112,6 +112,11 @@ export async function resolveServerCommand(
 		return;
 	}
 	switch (interaction.commandName) {
+		case Command.SERVER_ADDRESS: {
+			await addressResponse(interaction, srv);
+
+			break;
+		}
 		case Command.SERVER_PW: {
 			await passwordResponse(interaction, srv);
 
@@ -309,6 +314,23 @@ async function baseResponse(interaction: ChatInputCommandInteraction): Promise<v
 
 	await interaction.reply({
 		content: `**serverbot** is up.\n\n${lines.join('\n')}`,
+		flags: MessageFlags.Ephemeral
+	});
+}
+
+/**
+ * Ephemeral reply with the address (host:port) players connect to.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
+async function addressResponse(
+	interaction: ChatInputCommandInteraction,
+	srv: ServerConfig
+): Promise<void> {
+	await interaction.reply({
+		content: `Address for server ${srv.label} -> \`${srv.address}:${srv.port}\``,
 		flags: MessageFlags.Ephemeral
 	});
 }

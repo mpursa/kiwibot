@@ -18,6 +18,7 @@ export enum Command {
 	BASE = 'bot',
 	BOT_VERSION = 'bot_version',
 	LIST = 'list',
+	SERVER_ADDRESS = 'address',
 	SERVER_ADMIN = 'admin',
 	SERVER_PW = 'password',
 	SERVER_START = 'start',
@@ -80,6 +81,12 @@ export const COMMANDS: FullCommand[] = [
 		name: Command.SERVER_ADMIN,
 		description: 'Show specific server admin mode info',
 		type: CommandType.ADMIN,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_ADDRESS,
+		description: 'Show specific server connection address',
+		type: CommandType.SERVER,
 		selectOptions: serverSelect
 	},
 	{
