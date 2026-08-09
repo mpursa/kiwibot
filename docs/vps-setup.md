@@ -130,13 +130,20 @@ sudo systemctl restart serverbot
    "rcon": {
    	"port": 25575,
    	"password": "the-rcon-password",
-   	"playersCommand": "ShowPlayers"
+   	"playersCommand": "ShowPlayers",
+   	"playersFormat": "csv"
    }
    ```
 
-   `playersCommand` is the game's own query.
+   `playersCommand` is the game's own query. `playersFormat` describes the shape of its answer — `csv` (header row then one row per player, as Palworld answers), `sentence` (names after the last colon, as Minecraft answers) or `lines` — and is what lets `/stop` count connected players. Leave it out if the answer fits none of those: `/players` still works, and `/stop` simply skips the check.
 
 4. `sudo systemctl restart serverbot`, then try `/players` from Discord. A server with no `rcon` block simply answers that RCON isn't set; an unreachable port reports the connection error rather than failing the command.
+
+## The /stop guard
+
+With `playersFormat` configured, `/stop` asks the game who is connected and refuses while anyone is playing, pointing at `/stop-force`. `/stop-force` is an **admin** command: it needs the server's `adminRoleId`, so only holders of that role can end a session out from under players. Both use the same `systemctl stop`, so the sudoers file needs no new entry.
+
+When the answer is unknown — no `playersFormat`, or RCON not responding because the game is already broken — `/stop` goes ahead. The guard protects against thoughtlessness, not against a server that cannot answer for itself.
 
 ## Adding a game
 

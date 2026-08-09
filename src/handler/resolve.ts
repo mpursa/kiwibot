@@ -2,12 +2,15 @@ import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { ServerConfig, SERVERS, VERSION } from '../core/cfg.js';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.js';
+import { connectedPlayers } from '../server/players.js';
 import { rconExec } from '../server/rcon.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
 import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.js';
 
 // Discord max msg is 2k char. Leave room for code fences.
 const MAX_RCON_REPLY = 1_800;
+// Names shown before a stop refusal switches to a count.
+const MAX_LISTED_PLAYERS = 10;
 
 /**
  * Base resolver for all commands.
@@ -145,7 +148,7 @@ export async function resolveServerCommand(
 			break;
 		}
 		case Command.SERVER_STOP: {
-			await stopServer(interaction, srv);
+			await stopServer(interaction, srv, false);
 
 			break;
 		}
@@ -193,6 +196,11 @@ export async function resolveAdminCommand(interaction: ChatInputCommandInteracti
 	switch (interaction.commandName) {
 		case Command.SERVER_ADMIN: {
 			await adminInfoResponse(interaction, srv);
+
+			break;
+		}
+		case Command.SERVER_STOP_FORCE: {
+			await stopServer(interaction, srv, true);
 
 			break;
 		}
@@ -436,21 +444,49 @@ async function startServer(
 }
 
 /**
+ * Comma-separated names, capped so a busy server cannot blow the message limit.
+ *
+ * @param {string[]} names - Connected player names.
+ * @returns {string} The first few names, with a count of the rest.
+ */
+function namesPreview(names: string[]): string {
+	if (names.length <= MAX_LISTED_PLAYERS) return names.join(', ');
+	const shown = names.slice(0, MAX_LISTED_PLAYERS).join(', ');
+	return `${shown} and ${names.length - MAX_LISTED_PLAYERS} more`;
+}
+
+/**
  * Stops the unit and names who asked. Defers first, same reason as startServer.
+ * Unless forced, refuses while players are connected — a question only
+ * answerable for servers whose rcon block declares a playersFormat; when the
+ * answer is unknown the stop goes ahead as it always did.
  *
  * @param {ChatInputCommandInteraction} interaction - Discord chat command.
  * @param {ServerConfig} srv - Target server.
+ * @param {boolean} force - Skip the connected-players check.
  * @returns {Promise<void>}
  */
 async function stopServer(
 	interaction: ChatInputCommandInteraction,
-	srv: ServerConfig
+	srv: ServerConfig,
+	force: boolean
 ): Promise<void> {
 	await interaction.deferReply();
 	if ((await getState(srv)) === 'stopped') {
 		await interaction.editReply(describe(srv, 'stopped'));
 
 		return;
+	}
+	if (!force) {
+		const players = await connectedPlayers(srv);
+		if (players !== undefined && players.length > 0) {
+			await interaction.editReply(
+				`✋ **${srv.label}** still has ${players.length} player${players.length === 1 ? '' : 's'} connected: ` +
+					`${namesPreview(players)}\nAsk an admin for \`/${Command.SERVER_STOP_FORCE}\` to stop it anyway.`
+			);
+
+			return;
+		}
 	}
 	await stopUnit(srv.unit);
 	const down = await waitFor(srv, 'stopped');

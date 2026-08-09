@@ -4,6 +4,19 @@ import { pathToFileURL } from 'node:url';
 export type Protocol = 'tcp' | 'udp';
 
 /**
+ * Shape of a game's answer to its players query, so the code can count players
+ * without knowing any particular game:
+ * - 'csv'      header row then one row per player (ex Palworld)
+ * - 'sentence' names after the last colon, comma-separated (ex Minecraft)
+ * - 'lines'    one player per line
+ * Omit it when the answer fits none of these: /stop then cannot check for
+ * connected players and stops the server as before.
+ */
+export type PlayersFormat = 'csv' | 'sentence' | 'lines';
+
+const PLAYERS_FORMATS: readonly string[] = ['csv', 'sentence', 'lines'];
+
+/**
  * Source RCON endpoint. The protocol is the same for every game that speaks it.
  */
 export interface RconConfig {
@@ -11,6 +24,7 @@ export interface RconConfig {
 	readonly port: number;
 	readonly password: string;
 	readonly playersCommand: string;
+	readonly playersFormat?: PlayersFormat;
 }
 
 export interface ServerConfig {
@@ -78,6 +92,16 @@ function requireString(o: Record<string, unknown>, key: string, where: string): 
 }
 
 /**
+ * Narrows an unvalidated value to a supported players format.
+ *
+ * @param {unknown} v - Value from the config file.
+ * @returns {v is PlayersFormat} True when it names a supported format.
+ */
+function isPlayersFormat(v: unknown): v is PlayersFormat {
+	return typeof v === 'string' && PLAYERS_FORMATS.includes(v);
+}
+
+/**
  * Validates the optional rcon block. The bot and the games share a host, so
  * host defaults to loopback — keep the RCON port off the public interface.
  *
@@ -101,11 +125,19 @@ function parseRcon(key: string, raw: unknown): RconConfig {
 		throw new Error(`servers.json: ${key}.rcon.host must be a non-empty string if present`);
 	}
 
+	const playersFormat = o['playersFormat'];
+	if (playersFormat !== undefined && !isPlayersFormat(playersFormat)) {
+		throw new Error(
+			`servers.json: ${key}.rcon.playersFormat must be one of ${PLAYERS_FORMATS.join(', ')}`
+		);
+	}
+
 	return {
 		host: typeof host === 'string' ? host : DEFAULT_RCON_HOST,
 		port,
 		password: requireString(o, 'password', `${key}.rcon`),
-		playersCommand: requireString(o, 'playersCommand', `${key}.rcon`)
+		playersCommand: requireString(o, 'playersCommand', `${key}.rcon`),
+		...(isPlayersFormat(playersFormat) ? { playersFormat } : {})
 	};
 }
 

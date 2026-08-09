@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { SERVERS, VERSION } from '../dist/core/cfg.js';
-import { Command, COMMANDS } from '../dist/discord/commands.js';
+import { Command, COMMANDS, CommandType } from '../dist/discord/commands.js';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
@@ -133,6 +133,25 @@ test('/admin on a server without admin mode says so', async (t) => {
 	});
 	await resolveAdminCommand(interaction);
 	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no Admin mode set!`);
+});
+
+test('/stop-force refuses a member without the admin role', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
+	if (entry === undefined) return t.skip('no configured server has adminRoleId');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_STOP_FORCE, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	// Refused before any systemctl call, so this never touches the machine.
+	await resolveAdminCommand(interaction);
+	assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
+});
+
+test('/stop-force is registered as an admin command', () => {
+	const cmd = COMMANDS.find((c) => c.name === Command.SERVER_STOP_FORCE);
+	assert.ok(cmd);
+	assert.equal(cmd.type, CommandType.ADMIN);
 });
 
 test('/admin refuses a member without the admin role', async (t) => {

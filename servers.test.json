@@ -20,7 +20,8 @@
 		"rcon": {
 			"port": 25599,
 			"password": "test-rcon-pw",
-			"playersCommand": "list"
+			"playersCommand": "list",
+			"playersFormat": "sentence"
 		}
 	}
 }

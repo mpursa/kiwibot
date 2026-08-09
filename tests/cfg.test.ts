@@ -102,6 +102,22 @@ test('an explicit rcon host wins over the default', () => {
 	assert.equal(servers.get('testworld')?.rcon?.host, '10.0.0.5');
 });
 
+test('playersFormat is optional and validated', () => {
+	const withFormat = (playersFormat: unknown) =>
+		loadServers(
+			fixture({
+				testworld: {
+					...VALID,
+					rcon: { port: 25575, password: 'pw', playersCommand: 'list', playersFormat }
+				}
+			})
+		);
+	assert.equal(withFormat('sentence').get('testworld')?.rcon?.playersFormat, 'sentence');
+	assert.equal(withFormat(undefined).get('testworld')?.rcon?.playersFormat, undefined);
+	assert.throws(() => withFormat('yaml'), /playersFormat/);
+	assert.throws(() => withFormat(3), /playersFormat/);
+});
+
 test('rejects a malformed rcon block', () => {
 	const withRcon = (rcon: unknown) => () => loadServers(fixture({ bad: { ...VALID, rcon } }));
 	assert.throws(withRcon('nope'), /rcon must be an object/);

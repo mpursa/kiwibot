@@ -24,7 +24,8 @@ export enum Command {
 	SERVER_PW = 'password',
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
-	SERVER_STOP = 'stop'
+	SERVER_STOP = 'stop',
+	SERVER_STOP_FORCE = 'stop-force'
 }
 
 type FullCommand = {
@@ -116,8 +117,14 @@ export const COMMANDS: FullCommand[] = [
 	},
 	{
 		name: Command.SERVER_STOP,
-		description: 'Stop specific server',
+		description: 'Stop specific server, unless players are connected',
 		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_STOP_FORCE,
+		description: 'Stop specific server even with players connected',
+		type: CommandType.ADMIN,
 		selectOptions: serverSelect
 	}
 ];
