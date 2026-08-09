@@ -66,12 +66,12 @@ const serverSelect = (o: SlashCommandStringOption) =>
 export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.BASE,
-		description: 'Check serverbot is up and list available commands',
+		description: 'Check kiwibot is up and list available commands',
 		type: CommandType.BASE
 	},
 	{
 		name: Command.BOT_VERSION,
-		description: 'Show the current serverbot version',
+		description: 'Show the current kiwibot version',
 		type: CommandType.BASE
 	},
 	{

@@ -1,14 +1,14 @@
 {
 	"plainworld": {
 		"label": "Plainworld",
-		"unit": "serverbot-test-plainworld",
+		"unit": "kiwibot-test-plainworld",
 		"address": "plain.test.example.com",
 		"port": 8211,
 		"protocol": "udp"
 	},
 	"adminworld": {
 		"label": "Adminworld",
-		"unit": "serverbot-test-adminworld",
+		"unit": "kiwibot-test-adminworld",
 		"address": "admin.test.example.com",
 		"port": 25565,
 		"protocol": "tcp",

@@ -24,7 +24,7 @@ export async function resolveCommand(interaction: ChatInputCommandInteraction): 
 	// Base role check.
 	if (!hasDefaultRole(interaction)) {
 		await interaction.reply({
-			content: "You don't have access to ServerBot!",
+			content: "You don't have access to KiwiBot!",
 			flags: MessageFlags.Ephemeral
 		});
 		return;
@@ -307,14 +307,14 @@ export async function commandNotSupportedResponse(
 }
 
 /**
- * Ephemeral reply with the running serverbot version.
+ * Ephemeral reply with the running kiwibot version.
  *
  * @param {ChatInputCommandInteraction} interaction - Discord chat command.
  * @returns {Promise<void>}
  */
 async function versionResponse(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.reply({
-		content: `ServerBot v.${VERSION}`,
+		content: `KiwiBot v.${VERSION}`,
 		flags: MessageFlags.Ephemeral
 	});
 }
@@ -330,7 +330,7 @@ async function baseResponse(interaction: ChatInputCommandInteraction): Promise<v
 	const lines = COMMANDS.map((command) => `\`/${command.name}\` — ${command.description}`);
 
 	await interaction.reply({
-		content: `**serverbot** is up.\n\n${lines.join('\n')}`,
+		content: `**kiwibot** is up.\n\n${lines.join('\n')}`,
 		flags: MessageFlags.Ephemeral
 	});
 }

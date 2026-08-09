@@ -1,4 +1,4 @@
-# Setting up serverbot on a VPS
+# Setting up kiwibot on a VPS
 
 Quick guide for a Debian/Ubuntu-style VPS with systemd. Prerequisites: Node.js ≥ 20.6, git, `ss` (package `iproute2`, present on virtually every distro), and the game servers already running as systemd units (e.g. `palworld.service`).
 
@@ -7,19 +7,19 @@ Quick guide for a Debian/Ubuntu-style VPS with systemd. Prerequisites: Node.js �
 Create a system account and grant it exactly the commands it needs:
 
 ```bash
-sudo useradd -r -s /usr/sbin/nologin -d /opt/serverbot serverbot
-sudo visudo -f /etc/sudoers.d/serverbot
+sudo useradd -r -s /usr/sbin/nologin -d /opt/kiwibot kiwibot
+sudo visudo -f /etc/sudoers.d/kiwibot
 ```
 
 ```
 Cmnd_Alias GAMECTL = /usr/bin/systemctl start palworld, \
                      /usr/bin/systemctl stop palworld
 
-serverbot ALL=(root) NOPASSWD: GAMECTL
+kiwibot ALL=(root) NOPASSWD: GAMECTL
 ```
 
 ```bash
-sudo chmod 440 /etc/sudoers.d/serverbot
+sudo chmod 440 /etc/sudoers.d/kiwibot
 sudo visudo -c
 ```
 
@@ -28,9 +28,9 @@ sudo visudo -c
 Verify the fence — the first two must **fail**, the third succeeds (and actually starts the game, so stop it after if unwanted):
 
 ```bash
-sudo -u serverbot sudo -n systemctl start nginx
-sudo -u serverbot sudo -n systemctl restart palworld
-sudo -u serverbot sudo -n systemctl start palworld
+sudo -u kiwibot sudo -n systemctl start nginx
+sudo -u kiwibot sudo -n systemctl restart palworld
+sudo -u kiwibot sudo -n systemctl start palworld
 ```
 
 ## 2. Deploy the code
@@ -38,42 +38,42 @@ sudo -u serverbot sudo -n systemctl start palworld
 Clone and build root-owned — the bot only ever reads its own code, so a compromised bot can't rewrite itself:
 
 ```bash
-sudo git clone https://github.com/YOU/serverbot.git /opt/serverbot
-cd /opt/serverbot
+sudo git clone https://github.com/YOU/kiwibot.git /opt/kiwibot
+cd /opt/kiwibot
 sudo npm ci --ignore-scripts
 sudo npm run build
 sudo cp servers.example.json servers.json
 sudo nano servers.json
 ```
 
-Then the environment file — the only thing `serverbot` owns (values come from the [Discord setup guide](discord-setup.md)):
+Then the environment file — the only thing `kiwibot` owns (values come from the [Discord setup guide](discord-setup.md)):
 
 ```bash
 sudo cp .env.example .env
 sudo nano .env
-sudo chown serverbot:serverbot /opt/serverbot/.env
-sudo chmod 600 /opt/serverbot/.env
+sudo chown kiwibot:kiwibot /opt/kiwibot/.env
+sudo chmod 600 /opt/kiwibot/.env
 ```
 
 ## 3. The systemd unit
 
 ```bash
-sudo nano /etc/systemd/system/serverbot.service
+sudo nano /etc/systemd/system/kiwibot.service
 ```
 
 ```ini
 [Unit]
-Description=serverbot — Discord game server control
+Description=kiwibot — Discord game server control
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=serverbot
-Group=serverbot
-WorkingDirectory=/opt/serverbot
-EnvironmentFile=/opt/serverbot/.env
-ExecStart=/usr/bin/node /opt/serverbot/dist/main.js
+User=kiwibot
+Group=kiwibot
+WorkingDirectory=/opt/kiwibot
+EnvironmentFile=/opt/kiwibot/.env
+ExecStart=/usr/bin/node /opt/kiwibot/dist/main.js
 Restart=always
 RestartSec=10
 
@@ -90,17 +90,17 @@ Why the hardening list stops there: sudo only works while the kernel's no-new-pr
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now serverbot
-sudo journalctl -u serverbot -f
+sudo systemctl enable --now kiwibot
+sudo journalctl -u kiwibot -f
 ```
 
 ## 4. Verify
 
-- The journal shows `serverbot ready as … — 1 server(s): palworld` and no sudoers warnings.
+- The journal shows `kiwibot ready as … — 1 server(s): palworld` and no sudoers warnings.
 - The sandbox didn't re-enable the flag behind your back:
 
   ```bash
-  grep NoNewPrivs /proc/$(systemctl show -p MainPID --value serverbot)/status
+  grep NoNewPrivs /proc/$(systemctl show -p MainPID --value kiwibot)/status
   ```
 
   must print `NoNewPrivs: 0`.
@@ -110,12 +110,12 @@ sudo journalctl -u serverbot -f
 ## Updating
 
 ```bash
-cd /opt/serverbot
+cd /opt/kiwibot
 sudo git pull
 sudo rm -rf dist            # tsc never deletes stale output
 sudo npm ci --ignore-scripts
 sudo npm run build
-sudo systemctl restart serverbot
+sudo systemctl restart kiwibot
 ```
 
 ## Enabling /players (optional)
@@ -123,7 +123,7 @@ sudo systemctl restart serverbot
 `/players` asks the game itself who is connected, over Source RCON. Per game:
 
 1. Turn RCON on in the game's own config (varies based on game, look it up).
-2. **Bind it to loopback or firewall the port.** RCON sends its password in the clear, and serverbot connects from the same host, so nothing outside the machine needs to reach it.
+2. **Bind it to loopback or firewall the port.** RCON sends its password in the clear, and kiwibot connects from the same host, so nothing outside the machine needs to reach it.
 3. Add the matching block to that server's `servers.json` entry:
 
    ```json
@@ -137,7 +137,7 @@ sudo systemctl restart serverbot
 
    `playersCommand` is the game's own query. `playersFormat` describes the shape of its answer — `csv` (header row then one row per player, as Palworld answers), `sentence` (names after the last colon, as Minecraft answers) or `lines` — and is what lets `/stop` count connected players. Leave it out if the answer fits none of those: `/players` still works, and `/stop` simply skips the check.
 
-4. `sudo systemctl restart serverbot`, then try `/players` from Discord. A server with no `rcon` block simply answers that RCON isn't set; an unreachable port reports the connection error rather than failing the command.
+4. `sudo systemctl restart kiwibot`, then try `/players` from Discord. A server with no `rcon` block simply answers that RCON isn't set; an unreachable port reports the connection error rather than failing the command.
 
 ## The /stop guard
 
@@ -148,5 +148,5 @@ When the answer is unknown — no `playersFormat`, or RCON not responding becaus
 ## Adding a game
 
 1. Add the entry to `servers.json` (key, `label`, `unit`, `address`, `port`, `protocol`, optional `startupMs`/`roleId`/`rcon`).
-2. Add its `systemctl start`/`stop` pair to `/etc/sudoers.d/serverbot` (via `sudo visudo -f`).
-3. `sudo systemctl restart serverbot`, then check the journal for warnings.
+2. Add its `systemctl start`/`stop` pair to `/etc/sudoers.d/kiwibot` (via `sudo visudo -f`).
+3. `sudo systemctl restart kiwibot`, then check the journal for warnings.
