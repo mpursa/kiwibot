@@ -13,6 +13,7 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
 - `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
+- `/players server:<name>` — who is connected, if RCON is configured
 
 The `server` option is required and is a dropdown built from `servers.json`, so no free-text unit names ever reach `systemctl`. Refusals are ephemeral; successful actions are visible to the channel, which doubles as an audit trail.
 
@@ -31,13 +32,16 @@ src/
 ├── handler/
 │   └── resolve.ts          base role gate, command dispatch, and all command handlers
 └── server/
+    ├── rcon.ts             Source RCON client
     └── state.ts            unit state, socket check, start/stop via sudo
 ```
 
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), and `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), and `rcon` (enables `/players`)
+
+The `rcon` block is `{ port, password, playersCommand }` plus an optional `host` (default `127.0.0.1`). `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and the game's raw answer is relayed unparsed, which is what keeps `/players` game-agnostic. Enable RCON in the game's own config (`enable-rcon`/`rcon.port` for Minecraft, `RCONEnabled`/`RCONPort` for Palworld) and keep the port on loopback or firewalled: the password crosses that socket in the clear.
 
 Both files are per-deployment and gitignored.
 

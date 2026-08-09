@@ -118,8 +118,28 @@ sudo npm run build
 sudo systemctl restart serverbot
 ```
 
+## Enabling /players (optional)
+
+`/players` asks the game itself who is connected, over Source RCON. Per game:
+
+1. Turn RCON on in the game's own config (varies based on game, look it up).
+2. **Bind it to loopback or firewall the port.** RCON sends its password in the clear, and serverbot connects from the same host, so nothing outside the machine needs to reach it.
+3. Add the matching block to that server's `servers.json` entry:
+
+   ```json
+   "rcon": {
+   	"port": 25575,
+   	"password": "the-rcon-password",
+   	"playersCommand": "ShowPlayers"
+   }
+   ```
+
+   `playersCommand` is the game's own query.
+
+4. `sudo systemctl restart serverbot`, then try `/players` from Discord. A server with no `rcon` block simply answers that RCON isn't set; an unreachable port reports the connection error rather than failing the command.
+
 ## Adding a game
 
-1. Add the entry to `servers.json` (key, `label`, `unit`, `address`, `port`, `protocol`, optional `startupMs`/`roleId`).
+1. Add the entry to `servers.json` (key, `label`, `unit`, `address`, `port`, `protocol`, optional `startupMs`/`roleId`/`rcon`).
 2. Add its `systemctl start`/`stop` pair to `/etc/sudoers.d/serverbot` (via `sudo visudo -f`).
 3. `sudo systemctl restart serverbot`, then check the journal for warnings.

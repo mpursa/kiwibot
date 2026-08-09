@@ -3,6 +3,16 @@ import { pathToFileURL } from 'node:url';
 
 export type Protocol = 'tcp' | 'udp';
 
+/**
+ * Source RCON endpoint. The protocol is the same for every game that speaks it.
+ */
+export interface RconConfig {
+	readonly host: string;
+	readonly port: number;
+	readonly password: string;
+	readonly playersCommand: string;
+}
+
 export interface ServerConfig {
 	readonly label: string;
 	readonly unit: string;
@@ -14,6 +24,7 @@ export interface ServerConfig {
 	readonly adminInfo?: string;
 	readonly roleId?: string;
 	readonly adminRoleId?: string;
+	readonly rcon?: RconConfig;
 }
 
 export type Servers = ReadonlyMap<string, ServerConfig>;
@@ -22,6 +33,7 @@ const DEFAULT_STARTUP_MS = 120_000;
 // Discord interaction tokens expire after 15 minutes; the final editReply after
 // waitFor() must land before that, so cap the configurable wait at 14 minutes.
 const MAX_STARTUP_MS = 840_000;
+const DEFAULT_RCON_HOST = '127.0.0.1';
 const SERVERS_PATH = process.env['SERVERS_PATH'];
 export const SERVERS = loadServers(
 	SERVERS_PATH !== undefined && SERVERS_PATH !== ''
@@ -63,6 +75,38 @@ function requireString(o: Record<string, unknown>, key: string, where: string): 
 	if (typeof v !== 'string' || v.trim() === '')
 		throw new Error(`servers.json: ${where}.${key} must be a non-empty string`);
 	return v;
+}
+
+/**
+ * Validates the optional rcon block. The bot and the games share a host, so
+ * host defaults to loopback — keep the RCON port off the public interface.
+ *
+ * @param {string} key - Server key, used in error messages.
+ * @param {unknown} raw - Unvalidated rcon block.
+ * @returns {RconConfig} The validated block, defaults applied.
+ */
+function parseRcon(key: string, raw: unknown): RconConfig {
+	if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+		throw new Error(`servers.json: ${key}.rcon must be an object`);
+	}
+	const o = raw as Record<string, unknown>;
+
+	const port = o['port'];
+	if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65_535) {
+		throw new Error(`servers.json: ${key}.rcon.port must be an integer between 1 and 65535`);
+	}
+
+	const host = o['host'];
+	if (host !== undefined && (typeof host !== 'string' || host.trim() === '')) {
+		throw new Error(`servers.json: ${key}.rcon.host must be a non-empty string if present`);
+	}
+
+	return {
+		host: typeof host === 'string' ? host : DEFAULT_RCON_HOST,
+		port,
+		password: requireString(o, 'password', `${key}.rcon`),
+		playersCommand: requireString(o, 'playersCommand', `${key}.rcon`)
+	};
 }
 
 /**
@@ -119,6 +163,9 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		throw new Error(`servers.json: ${key}.adminRoleId must be a string if present`);
 	}
 
+	const rconRaw = o['rcon'];
+	const rcon = rconRaw === undefined ? undefined : parseRcon(key, rconRaw);
+
 	return {
 		label: requireString(o, 'label', key),
 		unit: requireString(o, 'unit', key),
@@ -129,7 +176,8 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		...(typeof password === 'string' ? { password } : {}),
 		...(typeof adminInfo === 'string' ? { adminInfo } : {}),
 		...(typeof roleId === 'string' ? { roleId } : {}),
-		...(typeof adminRoleId === 'string' ? { adminRoleId } : {})
+		...(typeof adminRoleId === 'string' ? { adminRoleId } : {}),
+		...(rcon !== undefined ? { rcon } : {})
 	};
 }
 

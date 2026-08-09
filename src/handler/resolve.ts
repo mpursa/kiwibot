@@ -2,8 +2,12 @@ import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { ServerConfig, SERVERS, VERSION } from '../core/cfg.js';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.js';
+import { rconExec } from '../server/rcon.js';
 import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
 import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.js';
+
+// Discord max msg is 2k char. Leave room for code fences.
+const MAX_RCON_REPLY = 1_800;
 
 /**
  * Base resolver for all commands.
@@ -114,6 +118,11 @@ export async function resolveServerCommand(
 	switch (interaction.commandName) {
 		case Command.SERVER_ADDRESS: {
 			await addressResponse(interaction, srv);
+
+			break;
+		}
+		case Command.SERVER_PLAYERS: {
+			await playersResponse(interaction, srv);
 
 			break;
 		}
@@ -333,6 +342,46 @@ async function addressResponse(
 		content: `Address for server ${srv.label} -> \`${srv.address}:${srv.port}\``,
 		flags: MessageFlags.Ephemeral
 	});
+}
+
+/**
+ * Relays the game's own answer to its players query over RCON. The reply is
+ * not parsed: every game words it differently, and passing the text through is
+ * what keeps this command game-agnostic. Defers first — RCON is network I/O.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
+async function playersResponse(
+	interaction: ChatInputCommandInteraction,
+	srv: ServerConfig
+): Promise<void> {
+	const rcon = srv.rcon;
+	if (rcon === undefined) {
+		await interaction.reply({
+			content: `Server ${srv.label} has no RCON set!`,
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+	await interaction.deferReply();
+	let answer: string;
+	try {
+		answer = await rconExec(rcon, rcon.playersCommand);
+	} catch (err) {
+		// A dead RCON port is ordinary (server stopped), not a bot failure.
+		await interaction.editReply(
+			`❓ Could not reach **${srv.label}** over RCON: ${(err as Error).message}`
+		);
+		return;
+	}
+	if (answer === '') {
+		await interaction.editReply(`**${srv.label}** returned no player info.`);
+		return;
+	}
+	const body = answer.length > MAX_RCON_REPLY ? `${answer.slice(0, MAX_RCON_REPLY)}…` : answer;
+	await interaction.editReply(`**${srv.label}** players:\n\`\`\`\n${body}\n\`\`\``);
 }
 
 /**

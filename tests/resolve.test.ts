@@ -97,6 +97,32 @@ test('/password answers a permitted member', async () => {
 	assert.ok(contentOf(replies[0]).includes(srv.label));
 });
 
+test('/players on a server without rcon says so', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined);
+	if (entry === undefined) return t.skip('every configured server has rcon');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no RCON set!`);
+});
+
+test('/players reports an unreachable rcon endpoint instead of throwing', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
+	if (entry === undefined) return t.skip('no configured server has rcon');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	// Nothing listens on the test rcon port, so this exercises the failure path.
+	await resolveServerCommand(interaction);
+	assert.match(contentOf(replies[0]), /RCON/);
+	assert.ok(contentOf(replies[0]).includes(srv.label));
+});
+
 test('/admin on a server without admin mode says so', async (t) => {
 	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId === undefined);
 	if (entry === undefined) return t.skip('every configured server has adminRoleId');

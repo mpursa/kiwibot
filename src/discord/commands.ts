@@ -20,6 +20,7 @@ export enum Command {
 	LIST = 'list',
 	SERVER_ADDRESS = 'address',
 	SERVER_ADMIN = 'admin',
+	SERVER_PLAYERS = 'players',
 	SERVER_PW = 'password',
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
@@ -86,6 +87,12 @@ export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.SERVER_ADDRESS,
 		description: 'Show specific server connection address',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_PLAYERS,
+		description: 'Show who is connected to a specific server',
 		type: CommandType.SERVER,
 		selectOptions: serverSelect
 	},
