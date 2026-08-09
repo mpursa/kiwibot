@@ -1,11 +1,11 @@
-# serverbot
+# KiwiBot
 
 Discord bot for starting and stopping game servers via systemd. The bot gets exactly two sudo rules per game and nothing else.
 
 ## Commands
 
 - `/bot` — checks the bot is up and lists the available commands
-- `/bot_version` — the running serverbot version (ephemeral)
+- `/bot_version` — the running kiwibot version (ephemeral)
 - `/list` — state of every game server you have access to
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
@@ -49,7 +49,7 @@ The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (d
 
 Both files are per-deployment and gitignored.
 
-**Invariant: every `unit` in `servers.json` needs a matching `systemctl start`/`stop` pair in `/etc/sudoers.d/serverbot`.** Adding a game to the config without extending the sudoers file makes `/start` fail at runtime. The bot cross-checks at startup and logs a warning per missing entry — check `journalctl -u serverbot` after any config change.
+**Invariant: every `unit` in `servers.json` needs a matching `systemctl start`/`stop` pair in `/etc/sudoers.d/kiwibot`.** Adding a game to the config without extending the sudoers file makes `/start` fail at runtime. The bot cross-checks at startup and logs a warning per missing entry — check `journalctl -u kiwibot` after any config change.
 
 ## Development
 
@@ -72,8 +72,8 @@ Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](test
 
 ## Deployment
 
-Full walkthrough in [docs/vps-setup.md](docs/vps-setup.md): system account, sudoers fence, root-owned `/opt/serverbot`, and the hardened systemd unit with `ExecStart=/usr/bin/node /opt/serverbot/dist/main.js`. Three things worth remembering:
+Full walkthrough in [docs/vps-setup.md](docs/vps-setup.md): system account, sudoers fence, root-owned `/opt/kiwibot`, and the hardened systemd unit with `ExecStart=/usr/bin/node /opt/kiwibot/dist/main.js`. Three things worth remembering:
 
 - The unit must keep `NoNewPrivileges=false` **and** avoid seccomp-backed hardening options (`ProtectKernelTunables=`, `RestrictSUIDSGID=`, `SystemCallFilter=`, …) — for a non-root service those silently force the no-new-privileges flag on and break sudo.
 - When updating, clean the build output before compiling (`rm -rf dist`) — `tsc` never deletes stale files, and a leftover entry point from an older layout can silently keep running.
-- After deploying, verify `grep NoNewPrivs /proc/$(systemctl show -p MainPID --value serverbot)/status` prints `0`, then do one real `/start` from Discord.
+- After deploying, verify `grep NoNewPrivs /proc/$(systemctl show -p MainPID --value kiwibot)/status` prints `0`, then do one real `/start` from Discord.

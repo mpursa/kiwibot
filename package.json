@@ -1,6 +1,6 @@
 {
-	"name": "serverbot",
-	"version": "1.4.0",
+	"name": "kiwibot",
+	"version": "1.4.1",
 	"description": "Discord bot for starting and stopping game servers via systemd",
 	"type": "module",
 	"author": {

@@ -1,10 +1,10 @@
-# Adding serverbot to a Discord server
+# Adding kiwibot to a Discord server
 
 Quick guide from zero to working slash commands. You need **Manage Server** permission on the target Discord server.
 
 ## 1. Create the application
 
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it (e.g. `serverbot`).
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it (e.g. `kiwibot`).
 2. On **General Information**, copy the **Application ID** — this is `APP_ID` for your `.env`.
 3. Go to the **Bot** tab → **Reset Token** → copy the token — this is `DISCORD_TOKEN`. It's the only real secret; if it ever leaks, reset it here and update `.env`.
 4. Still on the Bot tab:
@@ -35,15 +35,15 @@ The bot appears in the member list **offline**. That's expected — it comes onl
 
 ## 4. Lock it down (recommended)
 
-**Server Settings → Integrations → serverbot → Manage**:
+**Server Settings → Integrations → kiwibot → Manage**:
 
 - **Channels**: turn off _All Channels_, add the one channel the bot should work in. Everywhere else, the commands disappear from the `/` picker.
 - **Roles/Members**: restrict who is offered the commands. People without the role would be refused on execution anyway (ephemerally), but hiding the commands is tidier.
 
-The permission profile shown on the bot's role may list extra "granted" entries (Create Invite, Attach Files, …) — those come from the `@everyone` role's server defaults, not from the bot's own role. Harmless; a channel permission override on the serverbot role can deny any of them (e.g. _Mention @everyone_) if you want.
+The permission profile shown on the bot's role may list extra "granted" entries (Create Invite, Attach Files, …) — those come from the `@everyone` role's server defaults, not from the bot's own role. Harmless; a channel permission override on the kiwibot role can deny any of them (e.g. _Mention @everyone_) if you want.
 
 ## Troubleshooting
 
-- **No commands in the picker**: check both OAuth scopes were granted, the bot can view the channel, and the startup log (`journalctl -u serverbot`) shows the "serverbot ready" registration line.
-- **"The application did not respond"**: the process isn't running or can't reach Discord — check `systemctl status serverbot` on the VPS.
-- **"You don't have access to serverbot."**: the invoker lacks the `DEFAULT_ROLE_ID` role.
+- **No commands in the picker**: check both OAuth scopes were granted, the bot can view the channel, and the startup log (`journalctl -u kiwibot`) shows the "kiwibot ready" registration line.
+- **"The application did not respond"**: the process isn't running or can't reach Discord — check `systemctl status kiwibot` on the VPS.
+- **"You don't have access to kiwibot."**: the invoker lacks the `DEFAULT_ROLE_ID` role.

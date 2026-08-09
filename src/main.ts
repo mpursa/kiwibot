@@ -27,7 +27,7 @@ client.once('clientReady', async (c) => {
 		.setToken(TOKEN)
 		.put(Routes.applicationGuildCommands(APP_ID, GUILD_ID), { body: discordCommands });
 	console.log(
-		`serverbot ready as ${c.user.tag} — ${SERVERS.size} server(s): ${[...SERVERS.keys()].join(', ')}`
+		`kiwibot ready as ${c.user.tag} — ${SERVERS.size} server(s): ${[...SERVERS.keys()].join(', ')}`
 	);
 });
 

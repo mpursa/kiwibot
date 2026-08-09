@@ -15,7 +15,7 @@ import { loadServers } from '../dist/core/cfg.js';
  * @returns {URL} file:// URL loadServers can read.
  */
 function fixture(config: unknown): URL {
-	const dir = mkdtempSync(join(tmpdir(), 'serverbot-test-'));
+	const dir = mkdtempSync(join(tmpdir(), 'kiwibot-test-'));
 	const file = join(dir, 'servers.json');
 	writeFileSync(file, JSON.stringify(config));
 	return pathToFileURL(file);
