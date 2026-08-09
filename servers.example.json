@@ -4,7 +4,13 @@
 		"unit": "palworld",
 		"address": "palworld.example.com",
 		"port": 8211,
-		"protocol": "udp"
+		"protocol": "udp",
+		"rcon": {
+			"port": 25575,
+			"password": "example_rcon_pw",
+			"playersCommand": "ShowPlayers",
+			"playersFormat": "csv"
+		}
 	},
 	"minecraft": {
 		"label": "Minecraft",
@@ -16,6 +22,13 @@
 		"password": "password",
 		"adminInfo": "Admin password: example_admin_pw\nAdmin console URL: https://url-example.com",
 		"roleId": "123456789012345678",
-		"adminRoleId": "023456789012345670"
+		"adminRoleId": "023456789012345670",
+		"rcon": {
+			"host": "127.0.0.1",
+			"port": 25576,
+			"password": "example_rcon_pw",
+			"playersCommand": "list",
+			"playersFormat": "sentence"
+		}
 	}
 }

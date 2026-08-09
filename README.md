@@ -9,13 +9,18 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/list` — state of every game server you have access to
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
-- `/stop server:<name>` — stops the unit and names who did it
+- `/stop server:<name>` — stops the unit and names who did it, unless players are connected
+- `/stop-force server:<name>` — stops the unit even with players connected (admin only)
+- `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
 - `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
+- `/players server:<name>` — who is connected, if RCON is configured
 
 The `server` option is required and is a dropdown built from `servers.json`, so no free-text unit names ever reach `systemctl`. Refusals are ephemeral; successful actions are visible to the channel, which doubles as an audit trail.
 
-Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_ID` from `.env`); a server whose config sets `roleId` requires that role in addition; `/admin` further requires the server's `adminRoleId`.
+Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_ID` from `.env`); a server whose config sets `roleId` requires that role in addition; `/admin` and `/stop-force` further require the server's `adminRoleId`.
+
+`/stop` asks the game who is connected before stopping, and refuses while anyone is playing. That check needs `rcon.playersFormat` to be set — without it (or when RCON does not answer) the answer is unknown and `/stop` proceeds as it always did, so the guard never blocks stopping a broken server.
 
 ## Layout
 
@@ -30,13 +35,17 @@ src/
 ├── handler/
 │   └── resolve.ts          base role gate, command dispatch, and all command handlers
 └── server/
+    ├── players.ts          who is connected, from the game's own answer
+    ├── rcon.ts             Source RCON client
     └── state.ts            unit state, socket check, start/stop via sudo
 ```
 
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), and `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), and `rcon` (enables `/players`)
+
+The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off. Enable RCON in the game's own config (`enable-rcon`/`rcon.port` for Minecraft, `RCONEnabled`/`RCONPort` for Palworld) and keep the port on loopback or firewalled: the password crosses that socket in the clear.
 
 Both files are per-deployment and gitignored.
 

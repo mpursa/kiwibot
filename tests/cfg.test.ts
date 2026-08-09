@@ -74,6 +74,63 @@ test('rejects an empty config and malformed keys', () => {
 	assert.throws(() => loadServers(fixture({ 'Bad Key': VALID })), /lowercase/);
 });
 
+test('an rcon block parses, defaulting host to loopback', () => {
+	const servers = loadServers(
+		fixture({
+			testworld: {
+				...VALID,
+				rcon: { port: 25575, password: 'pw', playersCommand: 'ShowPlayers' }
+			}
+		})
+	);
+	const rcon = servers.get('testworld')?.rcon;
+	assert.ok(rcon);
+	assert.equal(rcon.host, '127.0.0.1');
+	assert.equal(rcon.port, 25575);
+	assert.equal(rcon.playersCommand, 'ShowPlayers');
+});
+
+test('an explicit rcon host wins over the default', () => {
+	const servers = loadServers(
+		fixture({
+			testworld: {
+				...VALID,
+				rcon: { host: '10.0.0.5', port: 25575, password: 'pw', playersCommand: 'list' }
+			}
+		})
+	);
+	assert.equal(servers.get('testworld')?.rcon?.host, '10.0.0.5');
+});
+
+test('playersFormat is optional and validated', () => {
+	const withFormat = (playersFormat: unknown) =>
+		loadServers(
+			fixture({
+				testworld: {
+					...VALID,
+					rcon: { port: 25575, password: 'pw', playersCommand: 'list', playersFormat }
+				}
+			})
+		);
+	assert.equal(withFormat('sentence').get('testworld')?.rcon?.playersFormat, 'sentence');
+	assert.equal(withFormat(undefined).get('testworld')?.rcon?.playersFormat, undefined);
+	assert.throws(() => withFormat('yaml'), /playersFormat/);
+	assert.throws(() => withFormat(3), /playersFormat/);
+});
+
+test('rejects a malformed rcon block', () => {
+	const withRcon = (rcon: unknown) => () => loadServers(fixture({ bad: { ...VALID, rcon } }));
+	assert.throws(withRcon('nope'), /rcon must be an object/);
+	assert.throws(withRcon({ password: 'pw', playersCommand: 'list' }), /rcon\.port/);
+	assert.throws(withRcon({ port: 70_000, password: 'pw', playersCommand: 'list' }), /rcon\.port/);
+	assert.throws(withRcon({ port: 25575, playersCommand: 'list' }), /rcon\.password/);
+	assert.throws(withRcon({ port: 25575, password: 'pw' }), /rcon\.playersCommand/);
+	assert.throws(
+		withRcon({ host: '', port: 25575, password: 'pw', playersCommand: 'list' }),
+		/rcon\.host/
+	);
+});
+
 test('rejects non-string optional fields', () => {
 	assert.throws(() => loadServers(fixture({ bad: { ...VALID, password: 5 } })), /password/);
 	assert.throws(() => loadServers(fixture({ bad: { ...VALID, adminRoleId: 5 } })), /adminRoleId/);

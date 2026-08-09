@@ -18,11 +18,14 @@ export enum Command {
 	BASE = 'bot',
 	BOT_VERSION = 'bot_version',
 	LIST = 'list',
+	SERVER_ADDRESS = 'address',
 	SERVER_ADMIN = 'admin',
+	SERVER_PLAYERS = 'players',
 	SERVER_PW = 'password',
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
-	SERVER_STOP = 'stop'
+	SERVER_STOP = 'stop',
+	SERVER_STOP_FORCE = 'stop-force'
 }
 
 type FullCommand = {
@@ -83,6 +86,18 @@ export const COMMANDS: FullCommand[] = [
 		selectOptions: serverSelect
 	},
 	{
+		name: Command.SERVER_ADDRESS,
+		description: 'Show specific server connection address',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_PLAYERS,
+		description: 'Show who is connected to a specific server',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
 		name: Command.SERVER_PW,
 		description: 'Show specific server connection password',
 		type: CommandType.SERVER,
@@ -102,8 +117,14 @@ export const COMMANDS: FullCommand[] = [
 	},
 	{
 		name: Command.SERVER_STOP,
-		description: 'Stop specific server',
+		description: 'Stop specific server, unless players are connected',
 		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_STOP_FORCE,
+		description: 'Stop specific server even with players connected',
+		type: CommandType.ADMIN,
 		selectOptions: serverSelect
 	}
 ];

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { SERVERS, VERSION } from '../dist/core/cfg.js';
-import { Command, COMMANDS } from '../dist/discord/commands.js';
+import { Command, COMMANDS, CommandType } from '../dist/discord/commands.js';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
@@ -73,6 +73,18 @@ test('server commands refuse a member without the server role', async () => {
 	assert.equal(contentOf(replies[0]), `You don't have access to ${srv.label}!`);
 });
 
+test('/address answers with host:port for a permitted member', async () => {
+	const first = [...SERVERS.entries()][0];
+	assert.ok(first);
+	const [key, srv] = first;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_ADDRESS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.ok(contentOf(replies[0]).includes(`${srv.address}:${srv.port}`));
+});
+
 test('/password answers a permitted member', async () => {
 	const first = [...SERVERS.entries()][0];
 	assert.ok(first);
@@ -82,6 +94,32 @@ test('/password answers a permitted member', async () => {
 		roles: rolesFor(srv)
 	});
 	await resolveServerCommand(interaction);
+	assert.ok(contentOf(replies[0]).includes(srv.label));
+});
+
+test('/players on a server without rcon says so', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined);
+	if (entry === undefined) return t.skip('every configured server has rcon');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no RCON set!`);
+});
+
+test('/players reports an unreachable rcon endpoint instead of throwing', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
+	if (entry === undefined) return t.skip('no configured server has rcon');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	// Nothing listens on the test rcon port, so this exercises the failure path.
+	await resolveServerCommand(interaction);
+	assert.match(contentOf(replies[0]), /RCON/);
 	assert.ok(contentOf(replies[0]).includes(srv.label));
 });
 
@@ -95,6 +133,25 @@ test('/admin on a server without admin mode says so', async (t) => {
 	});
 	await resolveAdminCommand(interaction);
 	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no Admin mode set!`);
+});
+
+test('/stop-force refuses a member without the admin role', async (t) => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
+	if (entry === undefined) return t.skip('no configured server has adminRoleId');
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_STOP_FORCE, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	// Refused before any systemctl call, so this never touches the machine.
+	await resolveAdminCommand(interaction);
+	assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
+});
+
+test('/stop-force is registered as an admin command', () => {
+	const cmd = COMMANDS.find((c) => c.name === Command.SERVER_STOP_FORCE);
+	assert.ok(cmd);
+	assert.equal(cmd.type, CommandType.ADMIN);
 });
 
 test('/admin refuses a member without the admin role', async (t) => {
