@@ -5,6 +5,7 @@
 		"address": "palworld.example.com",
 		"port": 8211,
 		"protocol": "udp",
+		"autoStopMinutes": 30,
 		"rcon": {
 			"port": 25575,
 			"password": "example_rcon_pw",

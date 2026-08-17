@@ -39,6 +39,7 @@ export interface ServerConfig {
 	readonly roleId?: string;
 	readonly adminRoleId?: string;
 	readonly rcon?: RconConfig;
+	readonly autoStopMinutes?: number;
 }
 
 export type Servers = ReadonlyMap<string, ServerConfig>;
@@ -198,6 +199,21 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 	const rconRaw = o['rcon'];
 	const rcon = rconRaw === undefined ? undefined : parseRcon(key, rconRaw);
 
+	const autoStop = o['autoStopMinutes'];
+	if (
+		autoStop !== undefined &&
+		(typeof autoStop !== 'number' || !Number.isInteger(autoStop) || autoStop < 1)
+	) {
+		throw new Error(
+			`servers.json: ${key}.autoStopMinutes must be a positive whole number of minutes`
+		);
+	}
+	if (autoStop !== undefined && rcon?.playersFormat === undefined) {
+		throw new Error(
+			`servers.json: ${key}.autoStopMinutes requires ${key}.rcon.playersFormat, otherwise nobody can tell when the server is empty`
+		);
+	}
+
 	return {
 		label: requireString(o, 'label', key),
 		unit: requireString(o, 'unit', key),
@@ -209,7 +225,8 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		...(typeof adminInfo === 'string' ? { adminInfo } : {}),
 		...(typeof roleId === 'string' ? { roleId } : {}),
 		...(typeof adminRoleId === 'string' ? { adminRoleId } : {}),
-		...(rcon !== undefined ? { rcon } : {})
+		...(rcon !== undefined ? { rcon } : {}),
+		...(typeof autoStop === 'number' ? { autoStopMinutes: autoStop } : {})
 	};
 }
 
@@ -255,4 +272,16 @@ export function requireEnv(name: string): string {
 	const v = process.env[name];
 	if (v === undefined || v === '') throw new Error(`Missing environment variable ${name}`);
 	return v;
+}
+
+/**
+ * An optional environment variable, for features an absent value disables
+ * rather than breaks.
+ *
+ * @param {string} name - Variable name.
+ * @returns {string | undefined} Its value, or undefined when unset or empty.
+ */
+export function optionalEnv(name: string): string | undefined {
+	const v = process.env[name];
+	return v === undefined || v === '' ? undefined : v;
 }

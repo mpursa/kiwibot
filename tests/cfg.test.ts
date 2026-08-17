@@ -29,6 +29,48 @@ const VALID = {
 	protocol: 'udp'
 };
 
+const VALID_RCON = {
+	port: 25575,
+	password: 'pw',
+	playersCommand: 'ShowPlayers',
+	playersFormat: 'csv'
+};
+
+test('autoStopMinutes parses when the server can report its players', () => {
+	const servers = loadServers(
+		fixture({ testworld: { ...VALID, autoStopMinutes: 30, rcon: VALID_RCON } })
+	);
+	assert.equal(servers.get('testworld')?.autoStopMinutes, 30);
+});
+
+test('autoStopMinutes is absent by default', () => {
+	const servers = loadServers(fixture({ testworld: VALID }));
+	assert.equal(servers.get('testworld')?.autoStopMinutes, undefined);
+});
+
+test('rejects an autoStopMinutes that is not a positive whole number', () => {
+	const withAutoStop = (autoStopMinutes: unknown) => () =>
+		loadServers(fixture({ bad: { ...VALID, autoStopMinutes, rcon: VALID_RCON } }));
+	assert.throws(withAutoStop(0), /autoStopMinutes/);
+	assert.throws(withAutoStop(-5), /autoStopMinutes/);
+	assert.throws(withAutoStop(1.5), /autoStopMinutes/);
+	assert.throws(withAutoStop('30'), /autoStopMinutes/);
+});
+
+test('rejects autoStopMinutes without a way to count players', () => {
+	// No rcon at all.
+	assert.throws(
+		() => loadServers(fixture({ bad: { ...VALID, autoStopMinutes: 30 } })),
+		/playersFormat/
+	);
+	// Rcon, but no playersFormat to read the answer with.
+	const { playersFormat, ...noFormat } = VALID_RCON;
+	assert.throws(
+		() => loadServers(fixture({ bad: { ...VALID, autoStopMinutes: 30, rcon: noFormat } })),
+		/playersFormat/
+	);
+});
+
 test('a minimal server parses with defaults applied', () => {
 	const servers = loadServers(fixture({ testworld: VALID }));
 	const srv = servers.get('testworld');
