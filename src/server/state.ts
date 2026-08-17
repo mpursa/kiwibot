@@ -95,7 +95,7 @@ export async function stopUnit(unit: string): Promise<void> {
 
 /**
  * True if sudoers permits `systemctl <verb> <unit>` for this user. Used at
- * startup so a config/sudoers mismatch surfaces in the journal, not at 2am.
+ * startup so a config/sudoers mismatch surfaces in the journal.
  *
  * @param {'start' | 'stop'} verb - systemctl verb to probe.
  * @param {string} unit - systemd unit name.
@@ -103,7 +103,7 @@ export async function stopUnit(unit: string): Promise<void> {
  */
 export async function sudoAllows(verb: 'start' | 'stop', unit: string): Promise<boolean> {
 	try {
-		await run('sudo', ['-n', '-l', '/usr/bin/systemctl', verb, unit]);
+		await run('sudo', ['-n', '-l', 'systemctl', verb, unit]);
 		return true;
 	} catch {
 		return false;
