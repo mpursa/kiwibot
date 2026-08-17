@@ -47,6 +47,9 @@ test('hasAdminRole stacks base, server and admin roles', () => {
 
 test('hasAdminRole without adminRoleId reduces to the server check', () => {
 	const srv = makeServer();
-	assert.equal(hasAdminRole(fakeInteraction('admin', { roles: [BASE_ROLE] }).interaction, srv), true);
+	assert.equal(
+		hasAdminRole(fakeInteraction('admin', { roles: [BASE_ROLE] }).interaction, srv),
+		true
+	);
 	assert.equal(hasAdminRole(fakeInteraction('admin').interaction, srv), false);
 });

@@ -162,7 +162,7 @@ A server can stop itself once nobody has been connected for a while, which is wo
 4. Optionally set `ALERT_CHANNEL_ID` in `.env` to the channel that should receive the notice (Developer Mode on → right-click the channel → Copy Channel ID). Leave it unset and auto-stops are recorded in the journal only. The bot needs permission to post in that channel — a channel permission override can block it even though it can post elsewhere.
 5. `sudo systemctl restart kiwibot`. The journal prints which servers are watched and their idle times at startup, then a line for each auto-stop.
 
-Notes on behaviour: the countdown only advances on a *confirmed* empty reading, so an RCON outage or a blank answer resets it — the bot stops late rather than stopping a server it could not verify. Countdowns are in memory, so restarting the bot starts them over. No sudoers change is needed: auto-stop uses the same `systemctl stop` as `/stop`.
+Notes on behaviour: the countdown only advances on a _confirmed_ empty reading, so an RCON outage or a blank answer resets it — the bot stops late rather than stopping a server it could not verify. Countdowns are in memory, so restarting the bot starts them over. No sudoers change is needed: auto-stop uses the same `systemctl stop` as `/stop`.
 
 ## Adding a game
 
