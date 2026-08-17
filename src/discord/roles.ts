@@ -53,7 +53,6 @@ export function hasServerRole(
  */
 export function hasAdminRole(interaction: ChatInputCommandInteraction, srv: ServerConfig): boolean {
 	return (
-		hasDefaultRole(interaction) &&
 		hasServerRole(interaction, srv) &&
 		(srv.adminRoleId === undefined || hasRole(interaction, srv.adminRoleId))
 	);
