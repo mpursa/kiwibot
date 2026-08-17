@@ -19,6 +19,7 @@ Enable Discord's Developer Mode first: **User Settings → Advanced → Develope
 - Right-click your server icon → **Copy Server ID** → `GUILD_ID`.
 - Create (or pick) the role that gates the bot, e.g. `@gameservers`. Server Settings → Roles → right-click the role → **Copy Role ID** → `DEFAULT_ROLE_ID`. Every command requires this role; a `roleId` in `servers.json` is an _additional_ requirement on top of it, and an `adminRoleId` further gates that server's `/admin` command.
 - Assign the role to the people who may control the servers.
+- Optional: right-click the channel that should receive auto-stop notices → **Copy Channel ID** → `ALERT_CHANNEL_ID`. Leave it unset to skip those announcements. Make sure the bot can post there — a channel permission override can block it even where it posts elsewhere.
 
 ## 3. Invite the bot
 
