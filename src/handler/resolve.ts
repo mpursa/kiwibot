@@ -436,7 +436,7 @@ async function startServer(
 	const up = await waitFor(srv, 'running');
 	await interaction.editReply(
 		up
-			? `🟢 **${srv.label}** ready · \`${srv.address}\``
+			? `🟢 **${srv.label}** ready · \`${srv.address}:${srv.port}\``
 			: `🟡 **${srv.label}** is taking longer than usual — try \`/status\`.`
 	);
 
