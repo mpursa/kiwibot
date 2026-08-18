@@ -145,6 +145,25 @@ With `playersFormat` configured, `/stop` asks the game who is connected and refu
 
 When the answer is unknown — no `playersFormat`, or RCON not responding because the game is already broken — `/stop` goes ahead. The guard protects against thoughtlessness, not against a server that cannot answer for itself.
 
+## Enabling auto-stop (optional)
+
+A server can stop itself once nobody has been connected for a while, which is worth having on a VPS you pay for by the hour.
+
+1. Give the server an `rcon` block **with `playersFormat`** (previous section) — the bot refuses `autoStopMinutes` without it, since it could not otherwise tell when the server is empty.
+2. **Verify the format first.** Run `/players` with the server empty and again with someone connected, and check the answer looks the way `playersFormat` expects. A mis-declared format can make a server look permanently empty, and auto-stop would then end a live session.
+3. Add the idle time to that server's `servers.json` entry:
+
+   ```json
+   "autoStopMinutes": 30
+   ```
+
+   Ten minutes is a sensible floor: shorter values can fire between two players swapping sessions.
+
+4. Optionally set `ALERT_CHANNEL_ID` in `.env` to the channel that should receive the notice (Developer Mode on → right-click the channel → Copy Channel ID). Leave it unset and auto-stops are recorded in the journal only. The bot needs permission to post in that channel — a channel permission override can block it even though it can post elsewhere.
+5. `sudo systemctl restart kiwibot`. The journal prints which servers are watched and their idle times at startup, then a line for each auto-stop.
+
+Notes on behaviour: the countdown only advances on a *confirmed* empty reading, so an RCON outage or a blank answer resets it — the bot stops late rather than stopping a server it could not verify. Countdowns are in memory, so restarting the bot starts them over. No sudoers change is needed: auto-stop uses the same `systemctl stop` as `/stop`.
+
 ## Adding a game
 
 1. Add the entry to `servers.json` (key, `label`, `unit`, `address`, `port`, `protocol`, optional `startupMs`/`roleId`/`rcon`).

@@ -54,15 +54,30 @@ export function parsePlayers(answer: string, format: PlayersFormat): string[] {
 		case 'sentence':
 			return fromSentence(lines);
 		case 'lines':
+		default:
 			return lines;
 	}
 }
 
 /**
+ * Player names in an answer, or undefined when the answer says nothing at all.
+ * A healthy endpoint always replies with something so a blank answer means
+ * the query failed and must never be read as "nobody is connected".
+ *
+ * @param {string} answer - Raw RCON answer.
+ * @param {PlayersFormat} format - Shape declared by the server config.
+ * @returns {string[] | undefined} Player names, or undefined when unknown.
+ */
+export function playersFromAnswer(answer: string, format: PlayersFormat): string[] | undefined {
+	if (answer.trim() === '') return undefined;
+	return parsePlayers(answer, format);
+}
+
+/**
  * Who is connected right now, as far as the bot can tell. Undefined means the
  * question is unanswerable — no RCON configured, no playersFormat to read the
- * answer with, or the endpoint did not respond — which callers must treat as
- * "unknown", never as "nobody".
+ * answer with, or the endpoint did not answer usefully — which callers must
+ * treat as "unknown", never as "nobody".
  *
  * @param {ServerConfig} srv - Server to query.
  * @returns {Promise<string[] | undefined>} Connected players, or undefined when unknown.
@@ -71,7 +86,7 @@ export async function connectedPlayers(srv: ServerConfig): Promise<string[] | un
 	const rcon = srv.rcon;
 	if (rcon?.playersFormat === undefined) return undefined;
 	try {
-		return parsePlayers(await rconExec(rcon, rcon.playersCommand), rcon.playersFormat);
+		return playersFromAnswer(await rconExec(rcon, rcon.playersCommand), rcon.playersFormat);
 	} catch {
 		// A dead RCON port tells us nothing about who is playing.
 		return undefined;

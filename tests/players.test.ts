@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { parsePlayers } from '../dist/server/players.js';
+import { parsePlayers, playersFromAnswer } from '../dist/server/players.js';
 
 test('csv drops the header row and takes the first column', () => {
 	// Palworld's ShowPlayers.
@@ -39,4 +39,19 @@ test('an empty answer yields no names in any format', () => {
 	for (const format of ['csv', 'sentence', 'lines'] as const) {
 		assert.deepEqual(parsePlayers('   \n  ', format), []);
 	}
+});
+
+test('playersFromAnswer reports a blank answer as unknown, not as nobody', () => {
+	// A healthy endpoint always says something, so blank means the query failed.
+	// Returning [] here would let auto-stop kill a populated server.
+	for (const format of ['csv', 'sentence', 'lines'] as const) {
+		assert.equal(playersFromAnswer('', format), undefined);
+		assert.equal(playersFromAnswer('   \n\t ', format), undefined);
+	}
+});
+
+test('playersFromAnswer parses a real answer as usual', () => {
+	assert.deepEqual(playersFromAnswer('name,playeruid,steamid\nAlice,1,2', 'csv'), ['Alice']);
+	// Header only: nobody is connected.
+	assert.deepEqual(playersFromAnswer('name,playeruid,steamid', 'csv'), []);
 });

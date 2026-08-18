@@ -30,11 +30,13 @@ src/
 ├── core/
 │   └── cfg.ts              types, validated servers.json loader, env access
 ├── discord/
+│   ├── alerts.ts           posts notices to ALERT_CHANNEL_ID
 │   ├── commands.ts         slash-command definitions and command-name enums
 │   └── roles.ts            role checks (base, per-server, admin)
 ├── handler/
 │   └── resolve.ts          base role gate, command dispatch, and all command handlers
 └── server/
+    ├── autostop.ts         idle tracker and the poller that stops empty servers
     ├── players.ts          who is connected, from the game's own answer
     ├── rcon.ts             Source RCON client
     └── state.ts            unit state, socket check, start/stop via sudo
@@ -42,10 +44,12 @@ src/
 
 ## Configuration
 
-- `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`
+- `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`, plus optional `ALERT_CHANNEL_ID` for auto-stop notices
 - `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), and `rcon` (enables `/players`)
 
-The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off. Enable RCON in the game's own config (`enable-rcon`/`rcon.port` for Minecraft, `RCONEnabled`/`RCONPort` for Palworld) and keep the port on loopback or firewalled: the password crosses that socket in the clear.
+The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off.
+
+`autoStopMinutes` stops a server by itself once it has been empty that long, announcing it in `ALERT_CHANNEL_ID` when that is set. It requires `rcon.playersFormat` — without a readable players answer the bot cannot tell when the server is empty, so the config is refused at startup rather than silently doing nothing. Only a *confirmed* empty reading counts down: RCON failing, or answering with nothing, resets the clock, so a server is never stopped on an unverified guess. Countdowns live in memory and restart with the bot. Enable RCON in the game's own config (`enable-rcon`/`rcon.port` for Minecraft, `RCONEnabled`/`RCONPort` for Palworld) and keep the port on loopback or firewalled: the password crosses that socket in the clear.
 
 Both files are per-deployment and gitignored.
 

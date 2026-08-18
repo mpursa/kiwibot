@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { SERVERS, requireEnv } from './core/cfg.js';
 import { resolveCommand } from './handler/resolve.js';
 import { discordCommands } from './discord/commands.js';
+import { startAutoStop } from './server/autostop.js';
 import { sudoAllows } from './server/state.js';
 
 const TOKEN = requireEnv('DISCORD_TOKEN');
@@ -29,6 +30,7 @@ client.once('clientReady', async (c) => {
 	console.log(
 		`kiwibot ready as ${c.user.tag} — ${SERVERS.size} server(s): ${[...SERVERS.keys()].join(', ')}`
 	);
+	startAutoStop(c);
 });
 
 /**
