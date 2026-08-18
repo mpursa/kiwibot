@@ -1,5 +1,8 @@
 # KiwiBot
 
+[![Release](https://img.shields.io/github/v/release/mpursa/kiwibot)](https://github.com/mpursa/kiwibot/releases/latest)
+[![CI](https://github.com/mpursa/kiwibot/actions/workflows/ci.yml/badge.svg)](https://github.com/mpursa/kiwibot/actions/workflows/ci.yml)
+
 Discord bot for starting and stopping game servers via systemd. The bot gets exactly two sudo rules per game and nothing else.
 
 ## Commands
