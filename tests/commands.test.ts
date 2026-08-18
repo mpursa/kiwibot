@@ -34,7 +34,9 @@ test('server commands carry the required server option', () => {
 		if (cmd.type !== CommandType.SERVER) continue;
 		const registered = discordCommands.find((c) => c.name === cmd.name);
 		assert.ok(
-			registered?.options?.some((o) => o.name === 'server' && 'required' in o && o.required === true)
+			registered?.options?.some(
+				(o) => o.name === 'server' && 'required' in o && o.required === true
+			)
 		);
 	}
 });
