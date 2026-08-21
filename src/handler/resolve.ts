@@ -246,7 +246,16 @@ async function listServersResponse(interaction: ChatInputCommandInteraction): Pr
 		return;
 	}
 	await interaction.deferReply();
-	const lines = await Promise.all(visible.map(async (srv) => describe(srv, await getState(srv))));
+	const lines = await Promise.all(
+		visible.map(async (srv) => {
+			const state = await getState(srv);
+			const line = describe(srv, state);
+			if (state !== 'running') return line;
+			// connectedPlayers is undefined when no RCON.
+			const players = await connectedPlayers(srv);
+			return players === undefined ? line : `${line} · ${players.length} online`;
+		})
+	);
 	await interaction.editReply(lines.join('\n'));
 }
 
