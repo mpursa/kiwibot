@@ -1,6 +1,6 @@
 import type { Client } from 'discord.js';
 
-import { SERVERS, optionalEnv, type ServerConfig } from '../core/cfg.js';
+import { SERVERS, type ServerConfig } from '../core/cfg.js';
 import { sendAlert } from '../discord/alerts.js';
 import { connectedPlayers } from './players.js';
 import { getState, stopUnit, waitFor, type ServerState } from './state.js';
@@ -76,9 +76,6 @@ export class AutoStopTracker {
 /** How often every auto-stop server is observed. */
 const DEFAULT_POLL_MS = 60_000;
 
-// Optional: unset simply means auto-stops are only recorded in the journal.
-const ALERT_CHANNEL_ID = optionalEnv('ALERT_CHANNEL_ID');
-
 /**
  * Starts watching every server that configures autoStopMinutes, stopping each
  * one once it has been confirmed empty for its configured time and announcing
@@ -120,7 +117,6 @@ export function startAutoStop(client: Client, pollMs: number = DEFAULT_POLL_MS):
 			}
 			await sendAlert(
 				client,
-				ALERT_CHANNEL_ID,
 				down
 					? `🔴 **${srv.label}** stopped automatically — no players for ${minutes} minutes.`
 					: `⚠️ Tried to auto-stop **${srv.label}** — it is still shutting down.`
