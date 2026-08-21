@@ -1,5 +1,9 @@
 import type { Client } from 'discord.js';
 
+import { optionalEnv } from '../core/cfg.js';
+
+export const ALERT_CHANNEL_ID = optionalEnv('ALERT_CHANNEL_ID');
+
 /**
  * Posts a message to the alert channel, if one is configured.
  *
@@ -8,16 +12,12 @@ import type { Client } from 'discord.js';
  * @param {string} message - Message to post.
  * @returns {Promise<void>}
  */
-export async function sendAlert(
-	client: Client,
-	channelId: string | undefined,
-	message: string
-): Promise<void> {
-	if (channelId === undefined) return;
+export async function sendAlert(client: Client, message: string): Promise<void> {
+	if (ALERT_CHANNEL_ID === undefined) return;
 	try {
-		const channel = await client.channels.fetch(channelId);
+		const channel = await client.channels.fetch(ALERT_CHANNEL_ID);
 		if (channel === null || !channel.isTextBased() || !('send' in channel)) {
-			console.warn(`ALERT_CHANNEL_ID ${channelId} is not a channel this bot can post in`);
+			console.warn(`ALERT_CHANNEL_ID ${ALERT_CHANNEL_ID} is not a channel this bot can post in`);
 			return;
 		}
 		await channel.send(message);

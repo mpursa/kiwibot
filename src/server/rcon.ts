@@ -33,7 +33,7 @@ interface RconPacket {
  * @param {string} body - Command or password text.
  * @returns {Buffer} The wire-format packet.
  */
-function encodePacket(id: number, type: number, body: string): Buffer {
+export function encodePacket(id: number, type: number, body: string): Buffer {
 	const bodyBuf = Buffer.from(body, 'utf8');
 	// id + type + body + the two nulls.
 	const size = bodyBuf.length + 10;
@@ -52,7 +52,7 @@ function encodePacket(id: number, type: number, body: string): Buffer {
  * @param {Buffer} buffer - Bytes received but not yet parsed.
  * @returns {{ packets: RconPacket[]; rest: Buffer }} Complete packets and the remainder.
  */
-function decodePackets(buffer: Buffer): { packets: RconPacket[]; rest: Buffer } {
+export function decodePackets(buffer: Buffer): { packets: RconPacket[]; rest: Buffer } {
 	const packets: RconPacket[] = [];
 	let offset = 0;
 	while (buffer.length - offset >= 4) {
