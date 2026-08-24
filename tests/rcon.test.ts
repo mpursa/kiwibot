@@ -1,7 +1,7 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
-import { decodePackets, encodePacket } from '../dist/server/rcon.js';
+import { decodePackets, encodePacket } from '../src/server/rcon.ts';
 
 test('a packet round-trips through encode and decode', () => {
 	const { packets, rest } = decodePackets(encodePacket(7, 2, 'ShowPlayers'));

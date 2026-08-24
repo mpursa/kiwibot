@@ -10,25 +10,22 @@
 	},
 	"license": "BSD-2-Clause",
 	"engines": {
-		"node": ">=20.6"
+		"bun": ">=1.4"
 	},
 	"scripts": {
-		"build": "tsc",
-		"clean": "node -e \"['dist', 'dist-tests'].forEach((d) => fs.rmSync(d, { recursive: true, force: true }))\"",
+		"start": "bun run --env-file=.env src/main.ts",
+		"watch": "bun --watch src/main.ts",
+		"test": "bun test --env-file=.env.test",
+		"testCommand": "bun run --env-file=.env.test tests/run-command.ts",
+		"typecheck": "tsc --noEmit",
 		"format": "prettier --write .",
-		"format:check": "prettier --check .",
-		"rebuild": "npm run clean && npm run build",
-		"watch": "tsc --watch",
-		"start": "node --env-file=.env dist/main.js",
-		"test": "npm run rebuild && tsc -p tests && node --env-file=.env.test --test dist-tests/",
-		"testCommand": "npm run build && tsc -p tests && node --env-file=.env.test dist-tests/run-command.js",
-		"typecheck": "tsc --noEmit"
+		"format:check": "prettier --check ."
 	},
 	"dependencies": {
 		"discord.js": "^14.16.0"
 	},
 	"devDependencies": {
-		"@types/node": "^22.7.0",
+		"@types/bun": "^1.4.0",
 		"prettier": "^3.9.6",
 		"typescript": "^5.6.0"
 	}

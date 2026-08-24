@@ -1,7 +1,7 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
-import { AutoStopTracker } from '../dist/server/autostop.js';
+import { AutoStopTracker } from '../src/server/autostop.ts';
 
 const MINUTES = 30;
 const MS = 60_000;

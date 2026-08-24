@@ -4,22 +4,22 @@
  * systemctl/ss checks on this machine, and /start·/stop attempt sudo systemctl —
  * off the VPS those fail, which is itself useful to see.
  *
- * Usage: npm run testCommand -- <command> [server] [--no-roles]
- *   npm run testCommand -- bot
- *   npm run testCommand -- status palworld
- *   npm run testCommand -- password palworld --no-roles
+ * Usage: bun run testCommand <command> [server] [--no-roles]
+ *   bun run testCommand bot
+ *   bun run testCommand status palworld
+ *   bun run testCommand password palworld --no-roles
  *
  * Roles: by default the fake member holds the base role (DEFAULT_ROLE_ID, supplied
- * by --env-file=.env.test via the npm script) plus the chosen server's
+ * by --env-file=.env.test via the package script) plus the chosen server's
  * roleId/adminRoleId, so commands succeed. --no-roles drops them all to watch the
  * refusal paths — resolveCommand includes the base-role gate, so what you'll see
  * first is the outermost "You don't have access" refusal.
  */
 import { MessageFlags } from 'discord.js';
 
-import { SERVERS } from '../dist/core/cfg.js';
-import { resolveCommand } from '../dist/handler/resolve.js';
-import { contentOf, fakeInteraction } from './fakes.js';
+import { SERVERS } from '../src/core/cfg.ts';
+import { resolveCommand } from '../src/handler/resolve.ts';
+import { contentOf, fakeInteraction } from './fakes.ts';
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((arg) => arg.startsWith('--')));
@@ -28,7 +28,7 @@ const commandName = positional[0];
 const serverKey = positional[1];
 
 if (commandName === undefined) {
-	console.error('Usage: npm run testCommand -- <command> [server] [--no-roles]');
+	console.error('Usage: bun run testCommand <command> [server] [--no-roles]');
 	console.error(`Configured servers: ${[...SERVERS.keys()].join(', ')}`);
 	process.exit(1);
 }

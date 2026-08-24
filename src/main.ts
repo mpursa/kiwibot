@@ -1,11 +1,11 @@
 import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 
-import { SERVERS, VERSION, requireEnv } from './core/cfg.js';
-import { resolveCommand } from './handler/resolve.js';
-import { sendAlert } from './discord/alerts.js';
-import { discordCommands } from './discord/commands.js';
-import { startAutoStop } from './server/autostop.js';
-import { sudoAllows } from './server/state.js';
+import { SERVERS, VERSION, requireEnv } from './core/cfg.ts';
+import { resolveCommand } from './handler/resolve.ts';
+import { sendAlert } from './discord/alerts.ts';
+import { discordCommands } from './discord/commands.ts';
+import { startAutoStop } from './server/autostop.ts';
+import { sudoAllows } from './server/state.ts';
 
 const TOKEN = requireEnv('DISCORD_TOKEN');
 const APP_ID = requireEnv('APP_ID');

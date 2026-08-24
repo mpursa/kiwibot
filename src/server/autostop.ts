@@ -1,9 +1,9 @@
 import type { Client } from 'discord.js';
 
-import { SERVERS, type ServerConfig } from '../core/cfg.js';
-import { sendAlert } from '../discord/alerts.js';
-import { connectedPlayers } from './players.js';
-import { getState, stopUnit, waitFor, type ServerState } from './state.js';
+import { SERVERS, type ServerConfig } from '../core/cfg.ts';
+import { sendAlert } from '../discord/alerts.ts';
+import { connectedPlayers } from './players.ts';
+import { getState, stopUnit, waitFor, type ServerState } from './state.ts';
 
 /**
  * What the caller should do after one observation:

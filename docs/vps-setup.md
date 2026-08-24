@@ -1,6 +1,6 @@
 # Setting up kiwibot on a VPS
 
-Quick guide for a Debian/Ubuntu-style VPS with systemd. Prerequisites: Node.js ≥ 20.6, git, `ss` (package `iproute2`, present on virtually every distro), and the game servers already running as systemd units (e.g. `palworld.service`).
+Quick guide for a Debian/Ubuntu-style VPS with systemd. Prerequisites: Bun ≥ 1.4 installed system-wide (e.g. at `/usr/local/bin/bun`, so both root and the service account can run it), git, `ss` (package `iproute2`, present on virtually every distro), and the game servers already running as systemd units (e.g. `palworld.service`).
 
 ## 1. Service account and sudo fence
 
@@ -35,13 +35,12 @@ sudo -u kiwibot sudo -n systemctl start palworld
 
 ## 2. Deploy the code
 
-Clone and build root-owned — the bot only ever reads its own code, so a compromised bot can't rewrite itself:
+Clone and install root-owned — the bot only ever reads its own code, so a compromised bot can't rewrite itself. There is no build step: Bun runs the TypeScript sources directly.
 
 ```bash
 sudo git clone https://github.com/YOU/kiwibot.git /opt/kiwibot
 cd /opt/kiwibot
-sudo npm ci --ignore-scripts
-sudo npm run build
+sudo bun install --frozen-lockfile --ignore-scripts
 sudo cp servers.example.json servers.json
 sudo nano servers.json
 ```
@@ -73,7 +72,7 @@ User=kiwibot
 Group=kiwibot
 WorkingDirectory=/opt/kiwibot
 EnvironmentFile=/opt/kiwibot/.env
-ExecStart=/usr/bin/node /opt/kiwibot/dist/main.js
+ExecStart=/usr/local/bin/bun /opt/kiwibot/src/main.ts
 Restart=always
 RestartSec=10
 
@@ -112,9 +111,7 @@ sudo journalctl -u kiwibot -f
 ```bash
 cd /opt/kiwibot
 sudo git pull
-sudo rm -rf dist            # tsc never deletes stale output
-sudo npm ci --ignore-scripts
-sudo npm run build
+sudo bun install --frozen-lockfile --ignore-scripts
 sudo systemctl restart kiwibot
 ```
 

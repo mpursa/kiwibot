@@ -61,16 +61,16 @@ Both files are per-deployment and gitignored.
 ## Development
 
 ```bash
-npm install
-npm run build        # or: npm run watch
-npm start            # needs a filled-in .env and servers.json
-npm test             # offline unit tests — no Discord connection needed
-npm run testCommand -- status palworld   # run one bot command locally, print the reply
+bun install
+bun start            # needs a filled-in .env and servers.json
+bun run watch        # same, restarting on file changes
+bun run test         # offline unit tests — no Discord connection needed
+bun run testCommand status palworld   # run one bot command locally, print the reply
 ```
 
-Node ≥ 20.6 (native `--env-file`). Relative imports use `.js` extensions on purpose — they must match the compiled output.
+Bun ≥ 1.4. There is no build step — Bun runs the TypeScript sources directly, and relative imports use `.ts` extensions. `bun run typecheck` runs `tsc --noEmit` over everything.
 
-Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](tests/tsconfig.json) into `dist-tests/` and run by Node's built-in runner. They import the built `dist/` (which is why the main tsconfig emits declarations) and talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset). When renaming or deleting test files, `rm -rf dist-tests` first — `tsc` never removes stale output, and orphaned `*.test.js` files would keep running.
+Tests live in [tests/](tests/) and run straight from the sources with `bun test` (use `bun run test` so `.env.test` is loaded). They talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset).
 
 ## Guides
 
@@ -79,8 +79,7 @@ Tests live in [tests/](tests/), compiled by their own [tests/tsconfig.json](test
 
 ## Deployment
 
-Full walkthrough in [docs/vps-setup.md](docs/vps-setup.md): system account, sudoers fence, root-owned `/opt/kiwibot`, and the hardened systemd unit with `ExecStart=/usr/bin/node /opt/kiwibot/dist/main.js`. Three things worth remembering:
+Full walkthrough in [docs/vps-setup.md](docs/vps-setup.md): system account, sudoers fence, root-owned `/opt/kiwibot`, and the hardened systemd unit with `ExecStart=/usr/local/bin/bun /opt/kiwibot/src/main.ts`. Two things worth remembering:
 
 - The unit must keep `NoNewPrivileges=false` **and** avoid seccomp-backed hardening options (`ProtectKernelTunables=`, `RestrictSUIDSGID=`, `SystemCallFilter=`, …) — for a non-root service those silently force the no-new-privileges flag on and break sudo.
-- When updating, clean the build output before compiling (`rm -rf dist`) — `tsc` never deletes stale files, and a leftover entry point from an older layout can silently keep running.
 - After deploying, verify `grep NoNewPrivs /proc/$(systemctl show -p MainPID --value kiwibot)/status` prints `0`, then do one real `/start` from Discord.

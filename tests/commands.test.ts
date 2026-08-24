@@ -1,5 +1,5 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
 import {
 	Command,
@@ -7,8 +7,8 @@ import {
 	CommandType,
 	discordCommands,
 	getCommandFromName
-} from '../dist/discord/commands.js';
-import { fakeInteraction } from './fakes.js';
+} from '../src/discord/commands.ts';
+import { fakeInteraction } from './fakes.ts';
 
 test('getCommandFromName resolves registered commands', () => {
 	const cmd = getCommandFromName(fakeInteraction(Command.SERVER_START).interaction);

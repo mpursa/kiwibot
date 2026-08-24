@@ -1,8 +1,8 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
-import { hasAdminRole, hasDefaultRole, hasServerRole } from '../dist/discord/roles.js';
-import { fakeInteraction, makeServer } from './fakes.js';
+import { hasAdminRole, hasDefaultRole, hasServerRole } from '../src/discord/roles.ts';
+import { fakeInteraction, makeServer } from './fakes.ts';
 
 // Must match .env.test, which roles.ts read at import time.
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;

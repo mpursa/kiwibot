@@ -1,11 +1,11 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 
-import { loadServers } from '../dist/core/cfg.js';
+import { loadServers } from '../src/core/cfg.ts';
 
 /**
  * Writes a config object to a temp file and returns its URL, like the real

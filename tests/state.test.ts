@@ -1,8 +1,8 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
-import { describe } from '../dist/server/state.js';
-import { makeServer } from './fakes.js';
+import { describe } from '../src/server/state.ts';
+import { makeServer } from './fakes.ts';
 
 test('describe covers every state with the right marker', () => {
 	const srv = makeServer();

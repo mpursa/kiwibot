@@ -1,6 +1,6 @@
 import type { Client } from 'discord.js';
 
-import { optionalEnv } from '../core/cfg.js';
+import { optionalEnv } from '../core/cfg.ts';
 
 export const ALERT_CHANNEL_ID = optionalEnv('ALERT_CHANNEL_ID');
 
