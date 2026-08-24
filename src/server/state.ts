@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { Protocol, ServerConfig } from '../core/cfg.js';
+
+import type { Protocol, ServerConfig } from '../core/cfg.ts';
 
 const run = promisify(execFile);
 

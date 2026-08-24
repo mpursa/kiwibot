@@ -4,7 +4,7 @@ import {
 	SlashCommandStringOption
 } from 'discord.js';
 
-import { SERVERS } from '../core/cfg.js';
+import { SERVERS } from '../core/cfg.ts';
 
 export enum CommandType {
 	UNKNOWN,

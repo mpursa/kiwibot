@@ -15,7 +15,7 @@ jobs:
 
       - name: Check the tag matches package.json
         run: |
-          PKG="v$(node -p "JSON.parse(fs.readFileSync('package.json')).version")"
+          PKG="v$(jq -r .version package.json)"
           if [ "$PKG" != "$GITHUB_REF_NAME" ]; then
             echo "Tag $GITHUB_REF_NAME does not match package.json ($PKG)" >&2
             exit 1

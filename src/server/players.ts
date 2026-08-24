@@ -1,5 +1,5 @@
-import type { PlayersFormat, ServerConfig } from '../core/cfg.js';
-import { rconExec } from './rcon.js';
+import type { PlayersFormat, ServerConfig } from '../core/cfg.ts';
+import { rconExec } from './rcon.ts';
 
 /**
  * Names out of a CSV answer: a header row, then one row per player with the

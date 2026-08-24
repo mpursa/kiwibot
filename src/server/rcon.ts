@@ -1,6 +1,6 @@
 import { createConnection } from 'node:net';
 
-import type { RconConfig } from '../core/cfg.js';
+import type { RconConfig } from '../core/cfg.ts';
 
 // Source RCON packet types. AUTH_RESPONSE and EXEC share the value 2.
 const PACKET_AUTH = 3;
@@ -84,7 +84,7 @@ export async function rconExec(rcon: RconConfig, command: string): Promise<strin
 	return new Promise<string>((resolve, reject) => {
 		const socket = createConnection({ host: rcon.host, port: rcon.port });
 		const bodies: string[] = [];
-		// Weird ts bug for node 20.
+		// Weird ts bug in the Buffer typings:
 		// alloc() returns the narrower Buffer<ArrayBuffer>, but
 		// subarray() hands back Buffer<ArrayBufferLike> on every reassignment.
 		let pending: Buffer = Buffer.alloc(0);

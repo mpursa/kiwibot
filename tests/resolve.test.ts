@@ -1,18 +1,25 @@
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
 
-import { SERVERS, VERSION } from '../dist/core/cfg.js';
-import { Command, COMMANDS, CommandType } from '../dist/discord/commands.js';
+import { SERVERS, VERSION } from '../src/core/cfg.ts';
+import { Command, COMMANDS, CommandType } from '../src/discord/commands.ts';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
 	resolveBaseCommand,
 	resolveServerCommand,
 	unknownCommandResponse
-} from '../dist/handler/resolve.js';
-import { contentOf, fakeInteraction } from './fakes.js';
+} from '../src/handler/resolve.ts';
+import { contentOf, fakeInteraction } from './fakes.ts';
 
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;
+
+// bun:test resolves skips at definition time (test.skipIf), so the server
+// lookups the conditional tests depend on are hoisted here.
+const NO_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined);
+const WITH_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
+const NO_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId === undefined);
+const WITH_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
 
 /**
  * The roles a member needs to pass the server (and optionally admin) checks.
@@ -97,10 +104,9 @@ test('/password answers a permitted member', async () => {
 	assert.ok(contentOf(replies[0]).includes(srv.label));
 });
 
-test('/players on a server without rcon says so', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined);
-	if (entry === undefined) return t.skip('every configured server has rcon');
-	const [key, srv] = entry;
+test.skipIf(NO_RCON === undefined)('/players on a server without rcon says so', async () => {
+	assert.ok(NO_RCON);
+	const [key, srv] = NO_RCON;
 	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
 		server: key,
 		roles: rolesFor(srv)
@@ -109,24 +115,25 @@ test('/players on a server without rcon says so', async (t) => {
 	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no RCON set!`);
 });
 
-test('/players reports an unreachable rcon endpoint instead of throwing', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
-	if (entry === undefined) return t.skip('no configured server has rcon');
-	const [key, srv] = entry;
-	const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
-		server: key,
-		roles: rolesFor(srv)
-	});
-	// Nothing listens on the test rcon port, so this exercises the failure path.
-	await resolveServerCommand(interaction);
-	assert.match(contentOf(replies[0]), /RCON/);
-	assert.ok(contentOf(replies[0]).includes(srv.label));
-});
+test.skipIf(WITH_RCON === undefined)(
+	'/players reports an unreachable rcon endpoint instead of throwing',
+	async () => {
+		assert.ok(WITH_RCON);
+		const [key, srv] = WITH_RCON;
+		const { interaction, replies } = fakeInteraction(Command.SERVER_PLAYERS, {
+			server: key,
+			roles: rolesFor(srv)
+		});
+		// Nothing listens on the test rcon port, so this exercises the failure path.
+		await resolveServerCommand(interaction);
+		assert.match(contentOf(replies[0]), /RCON/);
+		assert.ok(contentOf(replies[0]).includes(srv.label));
+	}
+);
 
-test('/admin on a server without admin mode says so', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId === undefined);
-	if (entry === undefined) return t.skip('every configured server has adminRoleId');
-	const [key, srv] = entry;
+test.skipIf(NO_ADMIN === undefined)('/admin on a server without admin mode says so', async () => {
+	assert.ok(NO_ADMIN);
+	const [key, srv] = NO_ADMIN;
 	const { interaction, replies } = fakeInteraction(Command.SERVER_ADMIN, {
 		server: key,
 		roles: rolesFor(srv)
@@ -135,18 +142,20 @@ test('/admin on a server without admin mode says so', async (t) => {
 	assert.equal(contentOf(replies[0]), `Server ${srv.label} has no Admin mode set!`);
 });
 
-test('/stop-force refuses a member without the admin role', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
-	if (entry === undefined) return t.skip('no configured server has adminRoleId');
-	const [key, srv] = entry;
-	const { interaction, replies } = fakeInteraction(Command.SERVER_STOP_FORCE, {
-		server: key,
-		roles: rolesFor(srv)
-	});
-	// Refused before any systemctl call, so this never touches the machine.
-	await resolveAdminCommand(interaction);
-	assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
-});
+test.skipIf(WITH_ADMIN === undefined)(
+	'/stop-force refuses a member without the admin role',
+	async () => {
+		assert.ok(WITH_ADMIN);
+		const [key, srv] = WITH_ADMIN;
+		const { interaction, replies } = fakeInteraction(Command.SERVER_STOP_FORCE, {
+			server: key,
+			roles: rolesFor(srv)
+		});
+		// Refused before any systemctl call, so this never touches the machine.
+		await resolveAdminCommand(interaction);
+		assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
+	}
+);
 
 test('/stop-force is registered as an admin command', () => {
 	const cmd = COMMANDS.find((c) => c.name === Command.SERVER_STOP_FORCE);
@@ -154,22 +163,23 @@ test('/stop-force is registered as an admin command', () => {
 	assert.equal(cmd.type, CommandType.ADMIN);
 });
 
-test('/admin refuses a member without the admin role', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
-	if (entry === undefined) return t.skip('no configured server has adminRoleId');
-	const [key, srv] = entry;
-	const { interaction, replies } = fakeInteraction(Command.SERVER_ADMIN, {
-		server: key,
-		roles: rolesFor(srv)
-	});
-	await resolveAdminCommand(interaction);
-	assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
-});
+test.skipIf(WITH_ADMIN === undefined)(
+	'/admin refuses a member without the admin role',
+	async () => {
+		assert.ok(WITH_ADMIN);
+		const [key, srv] = WITH_ADMIN;
+		const { interaction, replies } = fakeInteraction(Command.SERVER_ADMIN, {
+			server: key,
+			roles: rolesFor(srv)
+		});
+		await resolveAdminCommand(interaction);
+		assert.equal(contentOf(replies[0]), `You don't have admin access to ${srv.label} server!`);
+	}
+);
 
-test('/admin shows admin info to an admin', async (t) => {
-	const entry = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
-	if (entry === undefined) return t.skip('no configured server has adminRoleId');
-	const [key, srv] = entry;
+test.skipIf(WITH_ADMIN === undefined)('/admin shows admin info to an admin', async () => {
+	assert.ok(WITH_ADMIN);
+	const [key, srv] = WITH_ADMIN;
 	const { interaction, replies } = fakeInteraction(Command.SERVER_ADMIN, {
 		server: key,
 		roles: rolesFor(srv, true)

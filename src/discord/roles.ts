@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction } from 'discord.js';
-import { requireEnv, type ServerConfig } from '../core/cfg.js';
+
+import { requireEnv, type ServerConfig } from '../core/cfg.ts';
 
 const DEFAULT_ROLE_ID = requireEnv('DEFAULT_ROLE_ID');
 

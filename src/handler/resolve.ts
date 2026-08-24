@@ -1,11 +1,11 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { ServerConfig, SERVERS, VERSION } from '../core/cfg.js';
-import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.js';
-import { connectedPlayers } from '../server/players.js';
-import { rconExec } from '../server/rcon.js';
-import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.js';
-import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.js';
+import { ServerConfig, SERVERS, VERSION } from '../core/cfg.ts';
+import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
+import { connectedPlayers } from '../server/players.ts';
+import { rconExec } from '../server/rcon.ts';
+import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.ts';
+import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.ts';
 
 // Discord max msg is 2k char. Leave room for code fences.
 const MAX_RCON_REPLY = 1_800;
