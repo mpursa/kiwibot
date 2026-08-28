@@ -13,6 +13,7 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name> [delay:<minutes>]` — stops the unit and names who did it, unless players are connected
+- `/stop-cancel server:<name>` — cancels the server's scheduled stop, if one is pending
 - `/stop-force server:<name> [delay:<minutes>]` — stops the unit even with players connected (admin only)
 - `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
@@ -25,7 +26,7 @@ Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_
 
 `/stop` asks the game who is connected before stopping, and refuses while anyone is playing. That check needs `rcon.playersFormat` to be set — without it (or when RCON does not answer) the answer is unknown and `/stop` proceeds as it always did, so the guard never blocks stopping a broken server.
 
-The optional `delay` option (0–30 minutes) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped. A server can set `stopDelayMinutes` in its config as the default when the option is omitted; an explicit `delay` always wins, so `delay:0` forces an immediate stop even on a server with a default. When the default kicks in, the confirmation says the delay comes from the server's configuration and points at `delay:0`.
+The optional `delay` option (0–30 minutes) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped. `/stop-cancel` withdraws a pending schedule — anyone with the server's role can use it, including on a schedule an admin queued with `/stop-force`. A server can set `stopDelayMinutes` in its config as the default when the option is omitted; an explicit `delay` always wins, so `delay:0` forces an immediate stop even on a server with a default. When the default kicks in, the confirmation says the delay comes from the server's configuration and points at `delay:0`.
 
 ## Layout
 

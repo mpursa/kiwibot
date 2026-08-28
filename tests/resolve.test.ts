@@ -137,6 +137,18 @@ test.skipIf(WITH_RCON === undefined)(
 	}
 );
 
+test('/stop-cancel with nothing scheduled says so', async () => {
+	const first = [...SERVERS.entries()][0];
+	assert.ok(first);
+	const [key, srv] = first;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_STOP_CANCEL, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.equal(contentOf(replies[0]), `No stop is scheduled for ${srv.label}!`);
+});
+
 test.skipIf(NO_ADMIN === undefined)('/admin on a server without admin mode says so', async () => {
 	assert.ok(NO_ADMIN);
 	const [key, srv] = NO_ADMIN;

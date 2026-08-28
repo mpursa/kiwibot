@@ -26,6 +26,7 @@ export enum Command {
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
 	SERVER_STOP = 'stop',
+	SERVER_STOP_CANCEL = 'stop-cancel',
 	SERVER_STOP_FORCE = 'stop-force'
 }
 
@@ -140,6 +141,12 @@ export const COMMANDS: FullCommand[] = [
 		type: CommandType.SERVER,
 		selectOptions: serverSelect,
 		integerOptions: delaySelect
+	},
+	{
+		name: Command.SERVER_STOP_CANCEL,
+		description: 'Cancel a scheduled stop for a specific server',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
 	},
 	{
 		name: Command.SERVER_STOP_FORCE,

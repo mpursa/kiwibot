@@ -1,3 +1,5 @@
+import { setTimeout as sleep } from 'node:timers/promises';
+
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { REPO_URL, ServerConfig, SERVERS, VERSION, VERSION_CHANGELOG } from '../core/cfg.ts';
@@ -16,8 +18,8 @@ const MAX_LISTED_PLAYERS = 10;
 const MAX_CHANGELOG_REPLY = 1_500;
 
 const MS_PER_MINUTE = 60_000;
-// Servers with pending stop commands.
-const pendingStops = new Set<string>();
+// Scheduled stops by unit; aborting the controller cancels the pending sleep.
+const pendingStops = new Map<string, AbortController>();
 
 /**
  * Base resolver for all commands.
@@ -156,6 +158,11 @@ export async function resolveServerCommand(
 		}
 		case Command.SERVER_STOP: {
 			await stopServer(interaction, srv, false);
+
+			break;
+		}
+		case Command.SERVER_STOP_CANCEL: {
+			await cancelStopResponse(interaction, srv);
 
 			break;
 		}
@@ -529,23 +536,27 @@ async function stopAndReport(srv: ServerConfig, username: string): Promise<strin
  * @param {ServerConfig} srv - Target server.
  * @param {boolean} force - Skip the connected-players re-check.
  * @param {number} minutes - Minutes to wait before stopping.
+ * @param {AbortSignal} signal - Aborting it cancels the schedule.
  * @returns {Promise<void>}
  */
 async function delayedStop(
 	interaction: ChatInputCommandInteraction,
 	srv: ServerConfig,
 	force: boolean,
-	minutes: number
+	minutes: number,
+	signal: AbortSignal
 ): Promise<void> {
 	try {
 		if (minutes > 1) {
-			await new Promise((resolve) => setTimeout(resolve, (minutes - 1) * MS_PER_MINUTE));
+			await sleep((minutes - 1) * MS_PER_MINUTE, undefined, { signal });
 		}
 		await announce(interaction, `⚠️ **${srv.label}** will stop in 1 minute!`);
-		await new Promise((resolve) => setTimeout(resolve, MS_PER_MINUTE));
+		await sleep(MS_PER_MINUTE, undefined, { signal });
 		const blocker = await stopBlocker(srv, force, true);
 		await announce(interaction, blocker ?? (await stopAndReport(srv, interaction.user.username)));
 	} catch (err) {
+		// A cancelled schedule is not a failure; the canceller already announced it.
+		if (signal.aborted) return;
 		console.error(`Scheduled stop failed for ${srv.label}:`, (err as Error).message);
 		await announce(
 			interaction,
@@ -554,6 +565,34 @@ async function delayedStop(
 	} finally {
 		pendingStops.delete(srv.unit);
 	}
+}
+
+/**
+ * Cancels a server's scheduled stop, if one is pending. The confirmation is
+ * public, like the schedule it undoes, so the channel keeps its audit trail.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
+async function cancelStopResponse(
+	interaction: ChatInputCommandInteraction,
+	srv: ServerConfig
+): Promise<void> {
+	const pending = pendingStops.get(srv.unit);
+	if (pending === undefined) {
+		await interaction.reply({
+			content: `No stop is scheduled for ${srv.label}!`,
+			flags: MessageFlags.Ephemeral
+		});
+		return;
+	}
+	// Release the slot before aborting, so a new schedule can claim it.
+	pendingStops.delete(srv.unit);
+	pending.abort();
+	await interaction.reply(
+		`✅ Scheduled stop of **${srv.label}** cancelled by ${interaction.user.username}.`
+	);
 }
 
 /**
@@ -595,7 +634,8 @@ async function stopServer(
 			return;
 		}
 		// Claimed here, not in delayedStop: a second command must see it immediately.
-		pendingStops.add(srv.unit);
+		const controller = new AbortController();
+		pendingStops.set(srv.unit, controller);
 		// Whoever did not ask for a delay should hear where it came from.
 		const source =
 			requested === null
@@ -605,7 +645,7 @@ async function stopServer(
 			`⏱️ **${srv.label}** will stop in ${minutes} minute${minutes === 1 ? '' : 's'} ` +
 				`(queued by ${interaction.user.username})${source}.`
 		);
-		void delayedStop(interaction, srv, force, minutes);
+		void delayedStop(interaction, srv, force, minutes, controller.signal);
 
 		return;
 	}
