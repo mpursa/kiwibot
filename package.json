@@ -1,6 +1,7 @@
 {
 	"name": "kiwibot",
 	"version": "1.6.1",
+	"private": true,
 	"description": "Discord bot for starting and stopping game servers via systemd",
 	"type": "module",
 	"author": {
@@ -9,6 +10,10 @@
 		"url": "https://github.com/mpursa"
 	},
 	"license": "BSD-2-Clause",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mpursa/kiwibot.git"
+	},
 	"engines": {
 		"bun": ">=1.4"
 	},

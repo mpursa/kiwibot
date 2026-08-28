@@ -53,7 +53,7 @@ test('/bot lists every registered command', async () => {
 test('/bot_version reports the package version', async () => {
 	const { interaction, replies } = fakeInteraction(Command.BOT_VERSION);
 	await resolveBaseCommand(interaction);
-	assert.equal(contentOf(replies[0]), `KiwiBot v.${VERSION}`);
+	assert.ok(contentOf(replies[0]).includes(`KiwiBot v.${VERSION}`));
 });
 
 test('/list with no roles offers no servers', async () => {

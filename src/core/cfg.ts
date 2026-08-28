@@ -56,6 +56,10 @@ export const SERVERS = loadServers(
 		: new URL('../../servers.json', import.meta.url)
 );
 export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
+export const REPO_URL = loadRepoUrl(new URL('../../package.json', import.meta.url));
+export const VERSION_CHANGELOG = loadVersionChangelog(
+	new URL('../../CHANGELOG.md', import.meta.url)
+);
 
 /**
  * Project version from package.json. Display-only, so failures soft-fail
@@ -75,6 +79,69 @@ function loadVersion(path: URL): string {
 		// Fall through.
 	}
 	return 'unknown';
+}
+
+/**
+ * Browsable repository URL from package.json's repository field, with the
+ * git+ prefix and .git suffix stripped. Display-only, so failures soft-fail
+ * to undefined.
+ *
+ * @param {URL} path - package.json location, relative to the compiled file.
+ * @returns {string | undefined} e.g. https://github.com/mpursa/kiwibot
+ */
+function loadRepoUrl(path: URL): string | undefined {
+	try {
+		const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+		if (typeof parsed !== 'object' || parsed === null) return undefined;
+		const repository = (parsed as Record<string, unknown>)['repository'];
+		const url =
+			typeof repository === 'object' && repository !== null
+				? (repository as Record<string, unknown>)['url']
+				: repository;
+		if (typeof url !== 'string' || url === '') return undefined;
+		return url.replace(/^git\+/, '').replace(/\.git$/, '');
+	} catch {
+		return undefined;
+	}
+}
+
+/**
+ * The changelog section for one version: the lines between its `## [x.y.z]`
+ * heading and the next heading or the link-reference block at the bottom.
+ *
+ * @param {string} markdown - Full CHANGELOG.md content.
+ * @param {string} version - Version to look for, without the leading v.
+ * @returns {string | undefined} The entry body, or undefined when absent.
+ */
+export function changelogEntry(markdown: string, version: string): string | undefined {
+	const lines = markdown.split('\n');
+	const start = lines.findIndex((line) => line.startsWith(`## [${version}]`));
+	if (start === -1) return undefined;
+	let end = lines.length;
+	for (let i = start + 1; i < lines.length; i++) {
+		const line = lines[i] ?? '';
+		if (line.startsWith('## ') || /^\[[^\]]+\]:\s/.test(line)) {
+			end = i;
+			break;
+		}
+	}
+	const body = lines.slice(start + 1, end).join('\n').trim();
+	return body === '' ? undefined : body;
+}
+
+/**
+ * This release's changelog entry, for /bot_version. Display-only, so a
+ * missing file or section soft-fails to undefined.
+ *
+ * @param {URL} path - CHANGELOG.md location, relative to the compiled file.
+ * @returns {string | undefined} The entry body, or undefined when absent.
+ */
+function loadVersionChangelog(path: URL): string | undefined {
+	try {
+		return changelogEntry(readFileSync(path, 'utf8'), VERSION);
+	} catch {
+		return undefined;
+	}
 }
 
 /**
