@@ -1,8 +1,8 @@
 import {
-	ChatInputCommandInteraction,
+	type ChatInputCommandInteraction,
 	SlashCommandBuilder,
-	SlashCommandIntegerOption,
-	SlashCommandStringOption
+	type SlashCommandIntegerOption,
+	type SlashCommandStringOption
 } from 'discord.js';
 
 import { MAX_STOP_DELAY_MINUTES, SERVERS } from '../core/cfg.ts';

@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-import { ServerConfig } from '../src/core/cfg.ts';
+import type { ServerConfig } from '../src/core/cfg.ts';
 
 export interface FakeInteractionOptions {
 	/** Value the 'server' option resolves to; omitted means the option was not given. */

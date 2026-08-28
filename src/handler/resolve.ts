@@ -1,8 +1,8 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { REPO_URL, ServerConfig, SERVERS, VERSION, VERSION_CHANGELOG } from '../core/cfg.ts';
+import { REPO_URL, type ServerConfig, SERVERS, VERSION, VERSION_CHANGELOG } from '../core/cfg.ts';
 import { announce } from '../discord/messaging.ts';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
 import { connectedPlayers } from '../server/players.ts';

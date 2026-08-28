@@ -8,9 +8,16 @@
 		"exactOptionalPropertyTypes": true,
 		"noImplicitOverride": true,
 		"noUnusedLocals": true,
+		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"noEmit": true,
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"moduleDetection": "force",
+		"noPropertyAccessFromIndexSignature": true,
+		"resolveJsonModule": true
 	},
 	"include": ["src/**/*", "tests/**/*"]
 }
