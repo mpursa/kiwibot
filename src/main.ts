@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 
 import { SERVERS, VERSION, requireEnv } from './core/cfg.ts';
 import { resolveCommand } from './handler/resolve.ts';
-import { sendAlert } from './discord/alerts.ts';
+import { sendAlert } from './discord/messaging.ts';
 import { discordCommands } from './discord/commands.ts';
 import { startAutoStop } from './server/autostop.ts';
 import { sudoAllows } from './server/state.ts';
