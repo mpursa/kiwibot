@@ -98,6 +98,37 @@ test('/address answers with host:port for a permitted member', async () => {
 	assert.ok(contentOf(replies[0]).includes(`${srv.address}:${srv.port}`));
 });
 
+test('/status shows the auto-stop and stop-delay policies when configured', async () => {
+	const entry = [...SERVERS.entries()].find(([, srv]) => srv.autoStopMinutes !== undefined);
+	assert.ok(entry);
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_STATUS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	const content = contentOf(replies[0]);
+	assert.ok(content.includes(`auto-stops after ${srv.autoStopMinutes} minutes`));
+	assert.ok(content.includes(`waits ${srv.stopDelayMinutes} minutes by default`));
+});
+
+test('/status stays a single line for a server with no policies', async () => {
+	const entry = [...SERVERS.entries()].find(
+		([, srv]) => srv.autoStopMinutes === undefined && srv.stopDelayMinutes === undefined
+	);
+	assert.ok(entry);
+	const [key, srv] = entry;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_STATUS, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	const content = contentOf(replies[0]);
+	assert.ok(content.includes(srv.label));
+	assert.ok(!content.includes('auto-stops'));
+	assert.ok(!content.includes('by default'));
+});
+
 test('/password answers a permitted member', async () => {
 	const first = [...SERVERS.entries()][0];
 	assert.ok(first);

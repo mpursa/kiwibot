@@ -7,7 +7,14 @@ import { announce } from '../discord/messaging.ts';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
 import { connectedPlayers } from '../server/players.ts';
 import { rconExec } from '../server/rcon.ts';
-import { describe, getState, startUnit, stopUnit, waitFor } from '../server/state.ts';
+import {
+	describe,
+	getState,
+	startUnit,
+	stopUnit,
+	waitFor,
+	type ServerState
+} from '../server/state.ts';
 import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.ts';
 
 // Discord max msg is 2k char. Leave room for code fences.
@@ -147,7 +154,7 @@ export async function resolveServerCommand(
 			// Defer before touching systemctl/ss: Discord gives us 3 seconds to ack,
 			// and subprocess spawns on a loaded machine can blow that window.
 			await interaction.deferReply();
-			await interaction.editReply(describe(srv, await getState(srv)));
+			await interaction.editReply(statusResponse(srv, await getState(srv)));
 
 			break;
 		}
@@ -288,6 +295,26 @@ async function existingButUnusedCommandResponse(
 	});
 
 	return;
+}
+
+/**
+ * One-line state plus the server's standing policies.
+ *
+ * @param {ServerConfig} srv - Server being described.
+ * @param {ServerState} state - Its current state.
+ * @returns {string} The describe() line, plus one line per configured policy.
+ */
+function statusResponse(srv: ServerConfig, state: ServerState): string {
+	const lines = [describe(srv, state)];
+	if (srv.autoStopMinutes !== undefined) {
+		lines.push(`⏲️ auto-stops after ${srv.autoStopMinutes} minutes with nobody connected`);
+	}
+	if (srv.stopDelayMinutes !== undefined) {
+		lines.push(
+			`⏳ /${Command.SERVER_STOP} waits ${srv.stopDelayMinutes} minutes by default — \`delay:0\` skips the wait`
+		);
+	}
+	return lines.join('\n');
 }
 
 /**

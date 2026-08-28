@@ -17,6 +17,8 @@
 		"adminInfo": "Admin password: test_admin_pw\nAdmin console URL: https://admin.test.example.com",
 		"roleId": "200000000000000002",
 		"adminRoleId": "300000000000000003",
+		"autoStopMinutes": 30,
+		"stopDelayMinutes": 5,
 		"rcon": {
 			"port": 25599,
 			"password": "test-rcon-pw",

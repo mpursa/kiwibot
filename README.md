@@ -10,7 +10,7 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/bot` — checks the bot is up and lists the available commands
 - `/bot_version` — the running kiwibot version, what changed in it, and a link to the full changelog (ephemeral)
 - `/list` — state of every game server you have access to, with player counts where RCON can answer
-- `/status server:<name>` — state of one game server
+- `/status server:<name>` — state of one game server, plus its auto-stop and stop-delay settings
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name> [delay:<minutes>]` — stops the unit and names who did it, unless players are connected
 - `/stop-cancel server:<name>` — cancels the server's scheduled stop, if one is pending
