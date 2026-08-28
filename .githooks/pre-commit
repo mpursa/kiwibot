@@ -1,0 +1,13 @@
+#!/bin/sh
+# Formats the staged files with prettier, then re-stages them, so no commit
+# can introduce formatting drift. Wired by `bun install` via the prepare
+# script (git config core.hooksPath .githooks).
+set -eu
+
+# Staged files only, excluding deletions. -z/-0 keep odd filenames intact.
+# prettier skips files it has no parser for and honors .prettierignore.
+git diff --cached --name-only --diff-filter=ACMR -z |
+	xargs -0 -r bunx prettier --write --ignore-unknown
+
+git diff --cached --name-only --diff-filter=ACMR -z |
+	xargs -0 -r git add
