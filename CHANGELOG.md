@@ -4,6 +4,20 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-08-28
+
+### Added
+
+- Optional per-server `stopDelayMinutes` (1–30): the default `delay` for
+  `/stop` and `/stop-force` when the option is omitted. An explicit `delay`
+  always wins — `delay:0` still stops immediately. When the default applies,
+  the confirmation says the delay comes from the server's configuration.
+- `/stop-cancel`: cancels a server's scheduled stop. Available to anyone with
+  the server's role; the confirmation is public, like the schedule it undoes.
+- `/status` shows the server's standing policies under its state line: the
+  auto-stop idle time and the default stop delay, each only when configured —
+  so a server that vanishes overnight or waits after `/stop` explains itself.
+
 ## [1.7.0] - 2026-08-28
 
 ### Added
@@ -143,18 +157,19 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
-[1.7.0]: https://github.com/mpursa/kiwibot/compare/v1.6.1...v1.7.0
-[1.6.1]: https://github.com/mpursa/kiwibot/compare/v1.6.0...v1.6.1
-[1.6.0]: https://github.com/mpursa/kiwibot/compare/v1.5.4...v1.6.0
-[1.5.4]: https://github.com/mpursa/kiwibot/compare/v1.5.3...v1.5.4
-[1.5.3]: https://github.com/mpursa/kiwibot/compare/v1.5.2...v1.5.3
-[1.5.2]: https://github.com/mpursa/kiwibot/compare/v1.5.1...v1.5.2
-[1.5.1]: https://github.com/mpursa/kiwibot/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/mpursa/kiwibot/compare/v1.4.2...v1.5.0
-[1.4.2]: https://github.com/mpursa/kiwibot/compare/v1.4.1...v1.4.2
-[1.4.1]: https://github.com/mpursa/kiwibot/compare/v1.4.0...v1.4.1
-[1.4.0]: https://github.com/mpursa/kiwibot/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/mpursa/kiwibot/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/mpursa/kiwibot/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/mpursa/kiwibot/compare/v1.0.0...v1.1.0
+[1.8.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.0
+[1.7.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.7.0
+[1.6.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.6.1
+[1.6.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.6.0
+[1.5.4]: https://github.com/mpursa/kiwibot/releases/tag/v1.5.4
+[1.5.3]: https://github.com/mpursa/kiwibot/releases/tag/v1.5.3
+[1.5.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.5.2
+[1.5.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.5.1
+[1.5.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.5.0
+[1.4.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.4.2
+[1.4.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.4.1
+[1.4.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.4.0
+[1.3.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.3.0
+[1.2.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.2.0
+[1.1.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.1.0
 [1.0.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.0.0
