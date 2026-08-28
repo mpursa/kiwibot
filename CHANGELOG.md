@@ -4,6 +4,15 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-08-28
+
+### Added
+
+- This changelog, covering every release back to 1.0.0.
+- `/bot_version` now includes the running version's changelog entry and a link
+  to the full changelog on GitHub.
+- `repository` metadata and `private: true` in package.json.
+
 ## [1.6.1] - 2026-08-28
 
 ### Added
@@ -134,6 +143,7 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
+[1.7.0]: https://github.com/mpursa/kiwibot/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/mpursa/kiwibot/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/mpursa/kiwibot/compare/v1.5.4...v1.6.0
 [1.5.4]: https://github.com/mpursa/kiwibot/compare/v1.5.3...v1.5.4
