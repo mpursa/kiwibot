@@ -5,7 +5,48 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { loadServers } from '../src/core/cfg.ts';
+import { changelogEntry, loadServers } from '../src/core/cfg.ts';
+
+const CHANGELOG_FIXTURE = `# Changelog
+
+Intro text.
+
+## [1.1.0] - 2026-08-28
+
+### Added
+
+- A shiny thing.
+- Another thing.
+
+## [1.0.0] - 2026-08-05
+
+### Added
+
+- Initial release.
+
+[1.1.0]: https://example.com/compare/v1.0.0...v1.1.0
+[1.0.0]: https://example.com/releases/tag/v1.0.0
+`;
+
+test('changelogEntry extracts exactly one version section', () => {
+	const entry = changelogEntry(CHANGELOG_FIXTURE, '1.1.0');
+	assert.ok(entry);
+	assert.ok(entry.includes('A shiny thing.'));
+	assert.ok(!entry.includes('Initial release.'));
+	assert.ok(!entry.includes('## [1.1.0]'));
+});
+
+test('changelogEntry stops before the link-reference block', () => {
+	const entry = changelogEntry(CHANGELOG_FIXTURE, '1.0.0');
+	assert.ok(entry);
+	assert.ok(entry.includes('Initial release.'));
+	assert.ok(!entry.includes('example.com'));
+});
+
+test('changelogEntry is undefined for an unknown version', () => {
+	assert.equal(changelogEntry(CHANGELOG_FIXTURE, '9.9.9'), undefined);
+	assert.equal(changelogEntry('', '1.0.0'), undefined);
+});
 
 /**
  * Writes a config object to a temp file and returns its URL, like the real

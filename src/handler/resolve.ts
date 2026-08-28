@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { ServerConfig, SERVERS, VERSION } from '../core/cfg.ts';
+import { REPO_URL, ServerConfig, SERVERS, VERSION, VERSION_CHANGELOG } from '../core/cfg.ts';
 import { announce } from '../discord/messaging.ts';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
 import { connectedPlayers } from '../server/players.ts';
@@ -12,6 +12,8 @@ import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.ts
 const MAX_RCON_REPLY = 1_800;
 // Names shown before a stop refusal switches to a count.
 const MAX_LISTED_PLAYERS = 10;
+// A changelog entry must leave room for the version line and link.
+const MAX_CHANGELOG_REPLY = 1_500;
 
 const MS_PER_MINUTE = 60_000;
 // Servers with pending stop commands.
@@ -327,8 +329,16 @@ export async function commandNotSupportedResponse(
  * @returns {Promise<void>}
  */
 async function versionResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	const parts = [`**KiwiBot v.${VERSION}**`];
+	if (VERSION_CHANGELOG !== undefined) {
+		parts.push('', VERSION_CHANGELOG.slice(0, MAX_CHANGELOG_REPLY));
+	}
+	// Angle brackets keep Discord from unfurling the link into an embed.
+	if (REPO_URL !== undefined) {
+		parts.push('', `Full changelog: <${REPO_URL}/blob/main/CHANGELOG.md>`);
+	}
 	await interaction.reply({
-		content: `KiwiBot v.${VERSION}`,
+		content: parts.join('\n'),
 		flags: MessageFlags.Ephemeral
 	});
 }
