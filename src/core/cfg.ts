@@ -40,6 +40,7 @@ export interface ServerConfig {
 	readonly adminRoleId?: string;
 	readonly rcon?: RconConfig;
 	readonly autoStopMinutes?: number;
+	readonly stopDelayMinutes?: number;
 }
 
 export type Servers = ReadonlyMap<string, ServerConfig>;
@@ -48,6 +49,8 @@ const DEFAULT_STARTUP_MS = 120_000;
 // Discord interaction tokens expire after 15 minutes; the final editReply after
 // waitFor() must land before that, so cap the configurable wait at 14 minutes.
 const MAX_STARTUP_MS = 840_000;
+/** Upper bound for the stop 'delay' option and its per-server default. */
+export const MAX_STOP_DELAY_MINUTES = 30;
 const DEFAULT_RCON_HOST = '127.0.0.1';
 const SERVERS_PATH = process.env['SERVERS_PATH'];
 export const SERVERS = loadServers(
@@ -284,6 +287,19 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		);
 	}
 
+	const stopDelay = o['stopDelayMinutes'];
+	if (
+		stopDelay !== undefined &&
+		(typeof stopDelay !== 'number' ||
+			!Number.isInteger(stopDelay) ||
+			stopDelay < 1 ||
+			stopDelay > MAX_STOP_DELAY_MINUTES)
+	) {
+		throw new Error(
+			`servers.json: ${key}.stopDelayMinutes must be a whole number of minutes between 1 and ${MAX_STOP_DELAY_MINUTES}`
+		);
+	}
+
 	return {
 		label: requireString(o, 'label', key),
 		unit: requireString(o, 'unit', key),
@@ -296,7 +312,8 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		...(typeof roleId === 'string' ? { roleId } : {}),
 		...(typeof adminRoleId === 'string' ? { adminRoleId } : {}),
 		...(rcon !== undefined ? { rcon } : {}),
-		...(typeof autoStop === 'number' ? { autoStopMinutes: autoStop } : {})
+		...(typeof autoStop === 'number' ? { autoStopMinutes: autoStop } : {}),
+		...(typeof stopDelay === 'number' ? { stopDelayMinutes: stopDelay } : {})
 	};
 }
 

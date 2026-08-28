@@ -5,7 +5,7 @@ import {
 	SlashCommandStringOption
 } from 'discord.js';
 
-import { SERVERS } from '../core/cfg.ts';
+import { MAX_STOP_DELAY_MINUTES, SERVERS } from '../core/cfg.ts';
 
 export enum CommandType {
 	UNKNOWN,
@@ -62,7 +62,8 @@ const serverSelect = (o: SlashCommandStringOption) =>
 		.setRequired(true)
 		.addChoices(...SERVER_CHOICES);
 
-export const MAX_STOP_DELAY_MINUTES = 30;
+// Lives in core so config validation can share it; re-exported for convenience.
+export { MAX_STOP_DELAY_MINUTES } from '../core/cfg.ts';
 
 /**
  * The optional 'delay' option shared by the stop commands.

@@ -28,6 +28,27 @@ Intro text.
 [1.0.0]: https://example.com/releases/tag/v1.0.0
 `;
 
+test('stopDelayMinutes parses and is absent by default', () => {
+	const servers = loadServers(
+		fixture({
+			testworld: { ...VALID, stopDelayMinutes: 5 },
+			otherworld: { ...VALID, label: 'Otherworld', unit: 'otherworld' }
+		})
+	);
+	assert.equal(servers.get('testworld')?.stopDelayMinutes, 5);
+	assert.equal(servers.get('otherworld')?.stopDelayMinutes, undefined);
+});
+
+test('rejects a stopDelayMinutes outside 1-30 or not a whole number', () => {
+	const withDelay = (stopDelayMinutes: unknown) => () =>
+		loadServers(fixture({ bad: { ...VALID, stopDelayMinutes } }));
+	assert.throws(withDelay(0), /stopDelayMinutes/);
+	assert.throws(withDelay(-5), /stopDelayMinutes/);
+	assert.throws(withDelay(31), /stopDelayMinutes/);
+	assert.throws(withDelay(2.5), /stopDelayMinutes/);
+	assert.throws(withDelay('5'), /stopDelayMinutes/);
+});
+
 test('changelogEntry extracts exactly one version section', () => {
 	const entry = changelogEntry(CHANGELOG_FIXTURE, '1.1.0');
 	assert.ok(entry);

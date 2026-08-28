@@ -564,7 +564,8 @@ async function delayedStop(
  *
  * With the optional 'delay' option the stop is scheduled instead: the reply
  * confirms the schedule, a warning is announced 1 minute before the deadline,
- * and the checks re-run when it fires.
+ * and the checks re-run when it fires. A server's stopDelayMinutes supplies
+ * the default when the option is omitted; delay:0 forces an immediate stop.
  *
  * @param {ChatInputCommandInteraction} interaction - Discord chat command.
  * @param {ServerConfig} srv - Target server.
@@ -583,7 +584,10 @@ async function stopServer(
 
 		return;
 	}
-	const minutes = interaction.options.getInteger('delay') ?? 0;
+	// An explicit option — including delay:0 for "now" — beats the server's
+	// configured default; only a missing option falls back to it.
+	const requested = interaction.options.getInteger('delay');
+	const minutes = requested ?? srv.stopDelayMinutes ?? 0;
 	if (minutes > 0) {
 		if (pendingStops.has(srv.unit)) {
 			await interaction.editReply(`⏱️ **${srv.label}** already has a stop scheduled.`);
@@ -592,9 +596,14 @@ async function stopServer(
 		}
 		// Claimed here, not in delayedStop: a second command must see it immediately.
 		pendingStops.add(srv.unit);
+		// Whoever did not ask for a delay should hear where it came from.
+		const source =
+			requested === null
+				? ` — this server has a configured stop delay; use \`delay:0\` to stop now`
+				: '';
 		await interaction.editReply(
 			`⏱️ **${srv.label}** will stop in ${minutes} minute${minutes === 1 ? '' : 's'} ` +
-				`(queued by ${interaction.user.username}).`
+				`(queued by ${interaction.user.username})${source}.`
 		);
 		void delayedStop(interaction, srv, force, minutes);
 

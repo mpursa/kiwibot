@@ -25,7 +25,7 @@ Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_
 
 `/stop` asks the game who is connected before stopping, and refuses while anyone is playing. That check needs `rcon.playersFormat` to be set — without it (or when RCON does not answer) the answer is unknown and `/stop` proceeds as it always did, so the guard never blocks stopping a broken server.
 
-The optional `delay` option (0–30 minutes, 0 behaves like omitting it) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped.
+The optional `delay` option (0–30 minutes) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped. A server can set `stopDelayMinutes` in its config as the default when the option is omitted; an explicit `delay` always wins, so `delay:0` forces an immediate stop even on a server with a default. When the default kicks in, the confirmation says the delay comes from the server's configuration and points at `delay:0`.
 
 ## Layout
 
@@ -50,7 +50,7 @@ src/
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`, plus optional `ALERT_CHANNEL_ID` for alert notices
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), and `rcon` (enables `/players`)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), `stopDelayMinutes` (1–30, default `delay` for the stop commands), and `rcon` (enables `/players`)
 
 The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off.
 
