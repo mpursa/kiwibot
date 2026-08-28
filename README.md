@@ -10,9 +10,10 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/bot` — checks the bot is up and lists the available commands
 - `/bot_version` — the running kiwibot version, what changed in it, and a link to the full changelog (ephemeral)
 - `/list` — state of every game server you have access to, with player counts where RCON can answer
-- `/status server:<name>` — state of one game server
+- `/status server:<name>` — state of one game server, plus its auto-stop and stop-delay settings
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
 - `/stop server:<name> [delay:<minutes>]` — stops the unit and names who did it, unless players are connected
+- `/stop-cancel server:<name>` — cancels the server's scheduled stop, if one is pending
 - `/stop-force server:<name> [delay:<minutes>]` — stops the unit even with players connected (admin only)
 - `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
@@ -25,7 +26,7 @@ Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_
 
 `/stop` asks the game who is connected before stopping, and refuses while anyone is playing. That check needs `rcon.playersFormat` to be set — without it (or when RCON does not answer) the answer is unknown and `/stop` proceeds as it always did, so the guard never blocks stopping a broken server.
 
-The optional `delay` option (0–30 minutes, 0 behaves like omitting it) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped.
+The optional `delay` option (0–30 minutes) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped. `/stop-cancel` withdraws a pending schedule — anyone with the server's role can use it, including on a schedule an admin queued with `/stop-force`. A server can set `stopDelayMinutes` in its config as the default when the option is omitted; an explicit `delay` always wins, so `delay:0` forces an immediate stop even on a server with a default. When the default kicks in, the confirmation says the delay comes from the server's configuration and points at `delay:0`.
 
 ## Layout
 
@@ -50,7 +51,7 @@ src/
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`, plus optional `ALERT_CHANNEL_ID` for alert notices
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), and `rcon` (enables `/players`)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), `stopDelayMinutes` (1–30, default `delay` for the stop commands), and `rcon` (enables `/players`)
 
 The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off.
 

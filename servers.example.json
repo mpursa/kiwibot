@@ -20,6 +20,7 @@
 		"port": 25565,
 		"protocol": "tcp",
 		"startupMs": 120000,
+		"stopDelayMinutes": 5,
 		"password": "password",
 		"adminInfo": "Admin password: example_admin_pw\nAdmin console URL: https://url-example.com",
 		"roleId": "123456789012345678",
