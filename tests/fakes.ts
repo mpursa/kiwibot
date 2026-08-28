@@ -5,6 +5,8 @@ import { ServerConfig } from '../src/core/cfg.ts';
 export interface FakeInteractionOptions {
 	/** Value the 'server' option resolves to; omitted means the option was not given. */
 	readonly server?: string;
+	/** Value the 'delay' option resolves to; omitted means the option was not given. */
+	readonly delay?: number;
 	/** Role ids the invoking member holds. */
 	readonly roles?: string[];
 	readonly username?: string;
@@ -40,7 +42,14 @@ export function fakeInteraction(
 			return state.deferred;
 		},
 		options: {
-			getString: () => options.server ?? null
+			getString: () => options.server ?? null,
+			getInteger: () => options.delay ?? null
+		},
+		// Delayed stops announce to the invoking channel; record those too.
+		channel: {
+			async send(message: unknown): Promise<void> {
+				replies.push(message);
+			}
 		},
 		member: {
 			roles: { cache: new Set(options.roles ?? []) }

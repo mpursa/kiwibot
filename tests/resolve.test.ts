@@ -2,7 +2,13 @@ import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 
 import { SERVERS, VERSION } from '../src/core/cfg.ts';
-import { Command, COMMANDS, CommandType } from '../src/discord/commands.ts';
+import {
+	Command,
+	COMMANDS,
+	CommandType,
+	discordCommands,
+	MAX_STOP_DELAY_MINUTES
+} from '../src/discord/commands.ts';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
@@ -161,6 +167,18 @@ test('/stop-force is registered as an admin command', () => {
 	const cmd = COMMANDS.find((c) => c.name === Command.SERVER_STOP_FORCE);
 	assert.ok(cmd);
 	assert.equal(cmd.type, CommandType.ADMIN);
+});
+
+test('both stop commands register an optional bounded delay option', () => {
+	for (const name of [Command.SERVER_STOP, Command.SERVER_STOP_FORCE]) {
+		const json = discordCommands.find((c) => c.name === name);
+		assert.ok(json, `missing /${name}`);
+		const delay = json.options?.find((o) => o.name === 'delay');
+		assert.ok(delay, `/${name} has no delay option`);
+		assert.equal(delay.required ?? false, false);
+		assert.equal((delay as { min_value?: number }).min_value, 0);
+		assert.equal((delay as { max_value?: number }).max_value, MAX_STOP_DELAY_MINUTES);
+	}
 });
 
 test.skipIf(WITH_ADMIN === undefined)(

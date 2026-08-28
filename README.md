@@ -12,8 +12,8 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/list` — state of every game server you have access to, with player counts where RCON can answer
 - `/status server:<name>` — state of one game server
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
-- `/stop server:<name>` — stops the unit and names who did it, unless players are connected
-- `/stop-force server:<name>` — stops the unit even with players connected (admin only)
+- `/stop server:<name> [delay:<minutes>]` — stops the unit and names who did it, unless players are connected
+- `/stop-force server:<name> [delay:<minutes>]` — stops the unit even with players connected (admin only)
 - `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
 - `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
@@ -24,6 +24,8 @@ The `server` option is required and is a dropdown built from `servers.json`, so 
 Access has three tiers: **every** command requires the base role (`DEFAULT_ROLE_ID` from `.env`); a server whose config sets `roleId` requires that role in addition; `/admin` and `/stop-force` further require the server's `adminRoleId`.
 
 `/stop` asks the game who is connected before stopping, and refuses while anyone is playing. That check needs `rcon.playersFormat` to be set — without it (or when RCON does not answer) the answer is unknown and `/stop` proceeds as it always did, so the guard never blocks stopping a broken server.
+
+The optional `delay` option (0–30 minutes, 0 behaves like omitting it) schedules the stop instead of sending it immediately: the bot confirms the schedule, announces a warning in the channel 1 minute before the deadline, and re-runs the checks when it fires — a `/stop` whose server gained players during the wait is cancelled and says so. One scheduled stop per server at a time; a plain `/stop` while one is pending still works and the scheduled one then finds the server already stopped.
 
 ## Layout
 

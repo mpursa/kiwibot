@@ -1,7 +1,7 @@
 import type { Client } from 'discord.js';
 
 import { SERVERS, type ServerConfig } from '../core/cfg.ts';
-import { sendAlert } from '../discord/alerts.ts';
+import { sendAlert } from '../discord/messaging.ts';
 import { connectedPlayers } from './players.ts';
 import { getState, stopUnit, waitFor, type ServerState } from './state.ts';
 

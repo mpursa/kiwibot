@@ -1,6 +1,7 @@
 import {
 	ChatInputCommandInteraction,
 	SlashCommandBuilder,
+	SlashCommandIntegerOption,
 	SlashCommandStringOption
 } from 'discord.js';
 
@@ -33,6 +34,7 @@ type FullCommand = {
 	readonly description: string;
 	readonly type: CommandType;
 	readonly selectOptions?: (o: SlashCommandStringOption) => SlashCommandStringOption;
+	readonly integerOptions?: (o: SlashCommandIntegerOption) => SlashCommandIntegerOption;
 };
 
 const UNKNOWN_COMMAND: FullCommand = {
@@ -59,6 +61,22 @@ const serverSelect = (o: SlashCommandStringOption) =>
 		.setDescription('Which server?')
 		.setRequired(true)
 		.addChoices(...SERVER_CHOICES);
+
+export const MAX_STOP_DELAY_MINUTES = 30;
+
+/**
+ * The optional 'delay' option shared by the stop commands.
+ *
+ * @param {SlashCommandIntegerOption} o - Option builder passed by discord.js.
+ * @returns {SlashCommandIntegerOption} The configured option.
+ */
+const delaySelect = (o: SlashCommandIntegerOption) =>
+	o
+		.setName('delay')
+		.setDescription('Minutes to wait before stopping. 0-30 minutes.')
+		.setRequired(false)
+		.setMinValue(0)
+		.setMaxValue(MAX_STOP_DELAY_MINUTES);
 
 /**
  * Actual bot command list.
@@ -119,19 +137,22 @@ export const COMMANDS: FullCommand[] = [
 		name: Command.SERVER_STOP,
 		description: 'Stop specific server, unless players are connected',
 		type: CommandType.SERVER,
-		selectOptions: serverSelect
+		selectOptions: serverSelect,
+		integerOptions: delaySelect
 	},
 	{
 		name: Command.SERVER_STOP_FORCE,
 		description: 'Stop specific server even with players connected',
 		type: CommandType.ADMIN,
-		selectOptions: serverSelect
+		selectOptions: serverSelect,
+		integerOptions: delaySelect
 	}
 ];
 
 export const discordCommands = COMMANDS.map((cmd) => {
 	const builder = new SlashCommandBuilder().setName(cmd.name).setDescription(cmd.description);
 	if (cmd.selectOptions) builder.addStringOption(cmd.selectOptions);
+	if (cmd.integerOptions) builder.addIntegerOption(cmd.integerOptions);
 	return builder.toJSON();
 });
 

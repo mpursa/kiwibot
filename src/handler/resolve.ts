@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
 import { ServerConfig, SERVERS, VERSION } from '../core/cfg.ts';
+import { announce } from '../discord/messaging.ts';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
 import { connectedPlayers } from '../server/players.ts';
 import { rconExec } from '../server/rcon.ts';
@@ -11,6 +12,10 @@ import { hasAdminRole, hasDefaultRole, hasServerRole } from '../discord/roles.ts
 const MAX_RCON_REPLY = 1_800;
 // Names shown before a stop refusal switches to a count.
 const MAX_LISTED_PLAYERS = 10;
+
+const MS_PER_MINUTE = 60_000;
+// Servers with pending stop commands.
+const pendingStops = new Set<string>();
 
 /**
  * Base resolver for all commands.
@@ -465,10 +470,91 @@ function namesPreview(names: string[]): string {
 }
 
 /**
+ * Decides whether a stop can or cannot proceed (players connected).
+ * An admin role can force this to skip the check.
+ *
+ * @param {ServerConfig} srv - Target server.
+ * @param {boolean} force - Skip the connected-players check.
+ * @param {boolean} scheduled - Word the refusal as a cancelled schedule.
+ * @returns {Promise<string | undefined>} The message to show, or undefined when clear to stop.
+ */
+async function stopBlocker(
+	srv: ServerConfig,
+	force: boolean,
+	scheduled: boolean
+): Promise<string | undefined> {
+	if ((await getState(srv)) === 'stopped') return describe(srv, 'stopped');
+	if (force) return undefined;
+	const players = await connectedPlayers(srv);
+	if (players === undefined || players.length === 0) return undefined;
+	const who = `${players.length} player${players.length === 1 ? '' : 's'} connected: ${namesPreview(players)}`;
+	return scheduled
+		? `✋ Scheduled stop of **${srv.label}** cancelled — ${who}`
+		: `✋ **${srv.label}** still has ${who}\n` +
+				`Ask an admin for \`/${Command.SERVER_STOP_FORCE}\` to stop it anyway.`;
+}
+
+/**
+ * Stops the unit, waits for it to go down and words the outcome. Shared tail
+ * of the immediate and delayed paths.
+ *
+ * @param {ServerConfig} srv - Target server.
+ * @param {string} username - Who asked, for the audit line.
+ * @returns {Promise<string>} The outcome message.
+ */
+async function stopAndReport(srv: ServerConfig, username: string): Promise<string> {
+	await stopUnit(srv.unit);
+	const down = await waitFor(srv, 'stopped');
+	return down
+		? `🔴 **${srv.label}** stopped by ${username}`
+		: `🟡 **${srv.label}** is still shutting down — check \`/status\`.`;
+}
+
+/**
+ * The tail of a delayed stop: warns the channel 1 minute before the deadline,
+ * then re-runs the stop checks and stops the unit. Runs detached from the
+ * interaction.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @param {boolean} force - Skip the connected-players re-check.
+ * @param {number} minutes - Minutes to wait before stopping.
+ * @returns {Promise<void>}
+ */
+async function delayedStop(
+	interaction: ChatInputCommandInteraction,
+	srv: ServerConfig,
+	force: boolean,
+	minutes: number
+): Promise<void> {
+	try {
+		if (minutes > 1) {
+			await new Promise((resolve) => setTimeout(resolve, (minutes - 1) * MS_PER_MINUTE));
+		}
+		await announce(interaction, `⚠️ **${srv.label}** will stop in 1 minute!`);
+		await new Promise((resolve) => setTimeout(resolve, MS_PER_MINUTE));
+		const blocker = await stopBlocker(srv, force, true);
+		await announce(interaction, blocker ?? (await stopAndReport(srv, interaction.user.username)));
+	} catch (err) {
+		console.error(`Scheduled stop failed for ${srv.label}:`, (err as Error).message);
+		await announce(
+			interaction,
+			`⚠️ Scheduled stop of **${srv.label}** failed: ${(err as Error).message}`
+		);
+	} finally {
+		pendingStops.delete(srv.unit);
+	}
+}
+
+/**
  * Stops the unit and names who asked. Defers first, same reason as startServer.
  * Unless forced, refuses while players are connected — a question only
  * answerable for servers whose rcon block declares a playersFormat; when the
  * answer is unknown the stop goes ahead as it always did.
+ *
+ * With the optional 'delay' option the stop is scheduled instead: the reply
+ * confirms the schedule, a warning is announced 1 minute before the deadline,
+ * and the checks re-run when it fires.
  *
  * @param {ChatInputCommandInteraction} interaction - Discord chat command.
  * @param {ServerConfig} srv - Target server.
@@ -481,29 +567,30 @@ async function stopServer(
 	force: boolean
 ): Promise<void> {
 	await interaction.deferReply();
-	if ((await getState(srv)) === 'stopped') {
-		await interaction.editReply(describe(srv, 'stopped'));
+	const blocker = await stopBlocker(srv, force, false);
+	if (blocker !== undefined) {
+		await interaction.editReply(blocker);
 
 		return;
 	}
-	if (!force) {
-		const players = await connectedPlayers(srv);
-		if (players !== undefined && players.length > 0) {
-			await interaction.editReply(
-				`✋ **${srv.label}** still has ${players.length} player${players.length === 1 ? '' : 's'} connected: ` +
-					`${namesPreview(players)}\nAsk an admin for \`/${Command.SERVER_STOP_FORCE}\` to stop it anyway.`
-			);
+	const minutes = interaction.options.getInteger('delay') ?? 0;
+	if (minutes > 0) {
+		if (pendingStops.has(srv.unit)) {
+			await interaction.editReply(`⏱️ **${srv.label}** already has a stop scheduled.`);
 
 			return;
 		}
+		// Claimed here, not in delayedStop: a second command must see it immediately.
+		pendingStops.add(srv.unit);
+		await interaction.editReply(
+			`⏱️ **${srv.label}** will stop in ${minutes} minute${minutes === 1 ? '' : 's'} ` +
+				`(queued by ${interaction.user.username}).`
+		);
+		void delayedStop(interaction, srv, force, minutes);
+
+		return;
 	}
-	await stopUnit(srv.unit);
-	const down = await waitFor(srv, 'stopped');
-	await interaction.editReply(
-		down
-			? `🔴 **${srv.label}** stopped by ${interaction.user.username}`
-			: `🟡 **${srv.label}** is still shutting down — check \`/status\`.`
-	);
+	await interaction.editReply(await stopAndReport(srv, interaction.user.username));
 
 	return;
 }
