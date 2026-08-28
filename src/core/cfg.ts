@@ -125,7 +125,10 @@ export function changelogEntry(markdown: string, version: string): string | unde
 			break;
 		}
 	}
-	const body = lines.slice(start + 1, end).join('\n').trim();
+	const body = lines
+		.slice(start + 1, end)
+		.join('\n')
+		.trim();
 	return body === '' ? undefined : body;
 }
 
