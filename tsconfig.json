@@ -10,6 +10,7 @@
 		"noUnusedLocals": true,
 		"skipLibCheck": true,
 		"noEmit": true,
+		"types": ["bun"],
 		"allowImportingTsExtensions": true
 	},
 	"include": ["src/**/*", "tests/**/*"]
