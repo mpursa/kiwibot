@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { changelogEntry, loadServers } from '../src/core/cfg.ts';
+import { changelogEntry, loadServers } from '../../src/core/cfg.ts';
 
 const CHANGELOG_FIXTURE = `# Changelog
 

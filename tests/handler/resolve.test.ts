@@ -2,22 +2,22 @@ import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-import { SERVERS, VERSION } from '../src/core/cfg.ts';
+import { SERVERS, VERSION } from '../../src/core/cfg.ts';
 import {
 	Command,
 	COMMANDS,
 	CommandType,
 	discordCommands,
 	MAX_STOP_DELAY_MINUTES
-} from '../src/discord/commands.ts';
+} from '../../src/discord/commands.ts';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
 	resolveBaseCommand,
 	resolveServerCommand,
 	unknownCommandResponse
-} from '../src/handler/resolve.ts';
-import { contentOf, fakeInteraction } from './fakes.ts';
+} from '../../src/handler/resolve.ts';
+import { contentOf, fakeInteraction } from '../fakes.ts';
 
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;
 const SERVERS_FILE = process.env['SERVERS_PATH'] as string;

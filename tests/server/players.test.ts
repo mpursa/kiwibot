@@ -1,7 +1,7 @@
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 
-import { parsePlayers, playersFromAnswer } from '../src/server/players.ts';
+import { parsePlayers, playersFromAnswer } from '../../src/server/players.ts';
 
 test('csv drops the header row and takes the first column', () => {
 	// Palworld's ShowPlayers.

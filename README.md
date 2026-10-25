@@ -42,7 +42,11 @@ src/
 │   ├── commands.ts         slash-command definitions and command-name enums
 │   └── roles.ts            role checks (base, per-server, admin)
 ├── handler/
-│   └── resolve.ts          base role gate, command dispatch, and all command handlers
+│   ├── resolve.ts          base role gate and command dispatch
+│   ├── base.ts             /bot, /bot_version, /cfg_reload, /list
+│   ├── info.ts             /address, /password, /search, /players, /status, /admin
+│   ├── start.ts            /start
+│   └── stop.ts             /stop, /stop-force, /stop-cancel and scheduled stops
 └── server/
     ├── autostop.ts         idle tracker and the poller that stops empty servers
     ├── players.ts          who is connected, from the game's own answer
@@ -75,7 +79,7 @@ bun run testCommand status palworld   # run one bot command locally, print the r
 
 Bun ≥ 1.4. There is no build step — Bun runs the TypeScript sources directly, and relative imports use `.ts` extensions. `bun run typecheck` runs `tsc --noEmit` over everything.
 
-Tests live in [tests/](tests/) and run straight from the sources with `bun test` (use `bun run test` so `.env.test` is loaded). They talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset).
+Tests live in [tests/](tests/), in folders mirroring `src/`, and run straight from the sources with `bun test` (use `bun run test` so `.env.test` is loaded). They talk to the handlers through fake interaction objects ([tests/fakes.ts](tests/fakes.ts)), so no bot token or gateway connection is involved. `.env.test` supplies a dummy `DEFAULT_ROLE_ID` and sets `SERVERS_PATH=servers.test.json`, so tests and `testCommand` read the committed [servers.test.json](servers.test.json) fixture instead of your real `servers.json` (production leaves `SERVERS_PATH` unset).
 
 ## Guides
 
