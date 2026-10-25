@@ -18,6 +18,7 @@ export enum Command {
 	UNKNOWN = 'unknown',
 	BASE = 'bot',
 	BOT_VERSION = 'bot_version',
+	CFG_RELOAD = 'cfg_reload',
 	LIST = 'list',
 	SERVER_ADDRESS = 'address',
 	SERVER_ADMIN = 'admin',
@@ -92,6 +93,11 @@ export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.BOT_VERSION,
 		description: 'Show the current kiwibot version',
+		type: CommandType.BASE
+	},
+	{
+		name: Command.CFG_RELOAD,
+		description: 'Reload configuration file without restarting the bot',
 		type: CommandType.BASE
 	},
 	{

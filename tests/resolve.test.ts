@@ -1,5 +1,6 @@
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 import { SERVERS, VERSION } from '../src/core/cfg.ts';
 import {
@@ -19,6 +20,7 @@ import {
 import { contentOf, fakeInteraction } from './fakes.ts';
 
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;
+const SERVERS_FILE = process.env['SERVERS_PATH'] as string;
 
 // bun:test resolves skips at definition time (test.skipIf), so the server
 // lookups the conditional tests depend on are hoisted here.
@@ -60,6 +62,33 @@ test('/list with no roles offers no servers', async () => {
 	const { interaction, replies } = fakeInteraction(Command.LIST);
 	await resolveBaseCommand(interaction);
 	assert.equal(contentOf(replies[0]), 'No servers available!');
+});
+
+test('/cfg_reload swaps in a freshly read servers.json', async () => {
+	const before = SERVERS;
+	const { interaction, replies } = fakeInteraction(Command.CFG_RELOAD);
+	await resolveBaseCommand(interaction);
+	// SERVERS is a live binding, so this import must now see the new map.
+	assert.notEqual(SERVERS, before);
+	assert.deepEqual([...SERVERS.keys()], [...before.keys()]);
+	const content = contentOf(replies[0]);
+	assert.match(content, /^Config reloaded/);
+	for (const key of SERVERS.keys()) assert.ok(content.includes(key), `missing ${key}`);
+});
+
+test('/cfg_reload keeps the previous config when servers.json is malformed', async () => {
+	const before = SERVERS;
+	const original = readFileSync(SERVERS_FILE, 'utf8');
+	// The reload path is fixed at import time, so break the fixture itself and restore it.
+	writeFileSync(SERVERS_FILE, '{}');
+	try {
+		const { interaction, replies } = fakeInteraction(Command.CFG_RELOAD);
+		await resolveBaseCommand(interaction);
+		assert.match(contentOf(replies[0]), /^Reload failed.*no servers/);
+	} finally {
+		writeFileSync(SERVERS_FILE, original);
+	}
+	assert.equal(SERVERS, before);
 });
 
 test('an unregistered base command answers "not implemented"', async () => {

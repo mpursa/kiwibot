@@ -2,7 +2,14 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 
-import { REPO_URL, ServerConfig, SERVERS, VERSION, VERSION_CHANGELOG } from '../core/cfg.ts';
+import {
+	reloadServers,
+	REPO_URL,
+	ServerConfig,
+	SERVERS,
+	VERSION,
+	VERSION_CHANGELOG
+} from '../core/cfg.ts';
 import { announce } from '../discord/messaging.ts';
 import { Command, COMMANDS, CommandType, getCommandFromName } from '../discord/commands.ts';
 import { connectedPlayers } from '../server/players.ts';
@@ -91,6 +98,11 @@ export async function resolveBaseCommand(interaction: ChatInputCommandInteractio
 		}
 		case Command.BOT_VERSION: {
 			await versionResponse(interaction);
+
+			break;
+		}
+		case Command.CFG_RELOAD: {
+			await reloadResponse(interaction);
 
 			break;
 		}
@@ -248,6 +260,28 @@ export async function unknownCommandResponse(
 	});
 
 	return;
+}
+
+/**
+ * Reloads servers.json and replies with the loaded server keys, or with the
+ * validation error when the file is malformed (the previous config stays).
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @returns {Promise<void>}
+ */
+async function reloadResponse(interaction: ChatInputCommandInteraction): Promise<void> {
+	try {
+		const servers = reloadServers();
+		await interaction.reply({
+			content: `Config reloaded — ${servers.size} server(s): ${[...servers.keys()].join(', ')}`,
+			flags: MessageFlags.Ephemeral
+		});
+	} catch (err) {
+		await interaction.reply({
+			content: `Reload failed, keeping previous config: ${(err as Error).message}`,
+			flags: MessageFlags.Ephemeral
+		});
+	}
 }
 
 /**

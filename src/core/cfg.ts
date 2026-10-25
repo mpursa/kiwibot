@@ -53,11 +53,22 @@ const MAX_STARTUP_MS = 840_000;
 export const MAX_STOP_DELAY_MINUTES = 30;
 const DEFAULT_RCON_HOST = '127.0.0.1';
 const SERVERS_PATH = process.env['SERVERS_PATH'];
-export const SERVERS = loadServers(
+const SERVERS_URL =
 	SERVERS_PATH !== undefined && SERVERS_PATH !== ''
 		? pathToFileURL(SERVERS_PATH)
-		: new URL('../../servers.json', import.meta.url)
-);
+		: new URL('../../servers.json', import.meta.url);
+export let SERVERS = loadServers(SERVERS_URL);
+
+/**
+ * Re-reads servers.json and swaps SERVERS in place; importers see the new map
+ * through the live binding. A malformed file throws and leaves SERVERS as it was.
+ *
+ * @returns {Servers} The newly loaded map.
+ */
+export function reloadServers(): Servers {
+	SERVERS = loadServers(SERVERS_URL);
+	return SERVERS;
+}
 export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
 export const REPO_URL = loadRepoUrl(new URL('../../package.json', import.meta.url));
 export const VERSION_CHANGELOG = loadVersionChangelog(

@@ -4,6 +4,17 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `/cfg_reload`: re-reads `servers.json` without restarting the bot and replies
+  with the servers it loaded. A malformed file is rejected with the validation
+  error and the previous config stays in place. Available to anyone with the
+  base role; the reply is private. The `server` option's choices and the
+  auto-stop watcher keep the startup config until a restart, so a new server
+  cannot be picked yet and `autoStopMinutes` changes are ignored.
+
 ## [1.8.2] - 2026-10-25
 
 ### Changed
@@ -172,6 +183,7 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
+[Unreleased]: https://github.com/mpursa/kiwibot/compare/v1.8.2...HEAD
 [1.8.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.2
 [1.8.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.1
 [1.8.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.0
