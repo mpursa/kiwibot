@@ -4,7 +4,7 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.9.0] - 2026-10-25
 
 ### Added
 
@@ -14,10 +14,18 @@ All notable changes to KiwiBot, per release. The format follows
   base role; the reply is private. The `server` option's choices and the
   auto-stop watcher keep the startup config until a restart, so a new server
   cannot be picked yet and `autoStopMinutes` changes are ignored.
-- `/search`: the name to look for in the game's server browser, from the new
+- `/search-info`: the name to look for in the game's server browser, from the new
   optional `search` block in `servers.json` (`{ "name": "..." }`, a single
   field for now). Ephemeral like `/address` and `/password`; a server without
   the block says so.
+
+### Changed
+
+- `/bot_version` is renamed `/bot-version`; the old name disappears from
+  Discord once the bot restarts and re-registers its commands.
+- Command handlers split out of `handler/resolve.ts` into one file per group
+  (`base.ts`, `info.ts`, `start.ts`, `stop.ts`), and the tests into folders
+  mirroring `src/`. No runtime changes.
 
 ## [1.8.2] - 2026-10-25
 
@@ -187,7 +195,7 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
-[Unreleased]: https://github.com/mpursa/kiwibot/compare/v1.8.2...HEAD
+[1.9.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.9.0
 [1.8.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.2
 [1.8.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.1
 [1.8.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.0
