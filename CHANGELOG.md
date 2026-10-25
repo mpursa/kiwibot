@@ -8,12 +8,16 @@ All notable changes to KiwiBot, per release. The format follows
 
 ### Added
 
-- `/cfg_reload`: re-reads `servers.json` without restarting the bot and replies
+- `/cfg-reload`: re-reads `servers.json` without restarting the bot and replies
   with the servers it loaded. A malformed file is rejected with the validation
   error and the previous config stays in place. Available to anyone with the
   base role; the reply is private. The `server` option's choices and the
   auto-stop watcher keep the startup config until a restart, so a new server
   cannot be picked yet and `autoStopMinutes` changes are ignored.
+- `/search`: the name to look for in the game's server browser, from the new
+  optional `search` block in `servers.json` (`{ "name": "..." }`, a single
+  field for now). Ephemeral like `/address` and `/password`; a server without
+  the block says so.
 
 ## [1.8.2] - 2026-10-25
 
@@ -49,7 +53,7 @@ All notable changes to KiwiBot, per release. The format follows
 ### Added
 
 - This changelog, covering every release back to 1.0.0.
-- `/bot_version` now includes the running version's changelog entry and a link
+- `/bot-version` now includes the running version's changelog entry and a link
   to the full changelog on GitHub.
 - `repository` metadata and `private: true` in package.json.
 
@@ -145,7 +149,7 @@ All notable changes to KiwiBot, per release. The format follows
 
 ### Added
 
-- `/bot_version`: reports the running version from package.json.
+- `/bot-version`: reports the running version from package.json.
 - Offline test suite (fake interactions, no Discord connection) and the
   `testCommand` local runner, with a committed `servers.test.json` fixture.
 

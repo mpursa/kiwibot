@@ -17,13 +17,14 @@ export enum CommandType {
 export enum Command {
 	UNKNOWN = 'unknown',
 	BASE = 'bot',
-	BOT_VERSION = 'bot_version',
-	CFG_RELOAD = 'cfg_reload',
+	BOT_VERSION = 'bot-version',
+	CFG_RELOAD = 'cfg-reload',
 	LIST = 'list',
 	SERVER_ADDRESS = 'address',
 	SERVER_ADMIN = 'admin',
 	SERVER_PLAYERS = 'players',
 	SERVER_PW = 'password',
+	SERVER_SEARCH_INFO = 'search-info',
 	SERVER_START = 'start',
 	SERVER_STATUS = 'status',
 	SERVER_STOP = 'stop',
@@ -126,6 +127,12 @@ export const COMMANDS: FullCommand[] = [
 	{
 		name: Command.SERVER_PW,
 		description: 'Show specific server connection password',
+		type: CommandType.SERVER,
+		selectOptions: serverSelect
+	},
+	{
+		name: Command.SERVER_SEARCH_INFO,
+		description: 'Show how to find specific server in the game server browser',
 		type: CommandType.SERVER,
 		selectOptions: serverSelect
 	},

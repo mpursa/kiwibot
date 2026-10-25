@@ -6,6 +6,9 @@
 		"port": 8211,
 		"protocol": "udp",
 		"autoStopMinutes": 30,
+		"search": {
+			"name": "Kiwi Palworld"
+		},
 		"rcon": {
 			"port": 25575,
 			"password": "example_rcon_pw",

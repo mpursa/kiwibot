@@ -162,6 +162,11 @@ export async function resolveServerCommand(
 
 			break;
 		}
+		case Command.SERVER_SEARCH_INFO: {
+			await searchResponse(interaction, srv);
+
+			break;
+		}
 		case Command.SERVER_STATUS: {
 			// Defer before touching systemctl/ss: Discord gives us 3 seconds to ack,
 			// and subprocess spawns on a loaded machine can blow that window.
@@ -500,6 +505,27 @@ async function passwordResponse(
 			srv.password !== undefined
 				? `Password for server ${srv.label} -> ${srv.password}`
 				: `Server ${srv.label} does not have a password!`,
+		flags: MessageFlags.Ephemeral
+	});
+}
+
+/**
+ * Ephemeral reply with the name to look for in the game's server browser,
+ * when configured.
+ *
+ * @param {ChatInputCommandInteraction} interaction - Discord chat command.
+ * @param {ServerConfig} srv - Target server.
+ * @returns {Promise<void>}
+ */
+async function searchResponse(
+	interaction: ChatInputCommandInteraction,
+	srv: ServerConfig
+): Promise<void> {
+	await interaction.reply({
+		content:
+			srv.search !== undefined
+				? `Search name for server ${srv.label} -> \`${srv.search.name}\``
+				: `Server ${srv.label} does not have search info!`,
 		flags: MessageFlags.Ephemeral
 	});
 }

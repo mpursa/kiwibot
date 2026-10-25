@@ -8,7 +8,8 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 ## Commands
 
 - `/bot` — checks the bot is up and lists the available commands
-- `/bot_version` — the running kiwibot version, what changed in it, and a link to the full changelog (ephemeral)
+- `/bot-version` — the running kiwibot version, what changed in it, and a link to the full changelog (ephemeral)
+- `/cfg-reload` — reloads `servers.json` without restarting the bot; a malformed file keeps the previous config (ephemeral)
 - `/list` — state of every game server you have access to, with player counts where RCON can answer
 - `/status server:<name>` — state of one game server, plus its auto-stop and stop-delay settings
 - `/start server:<name>` — starts the unit, then reports when the game socket actually opens
@@ -17,6 +18,7 @@ Discord bot for starting and stopping game servers via systemd. The bot gets exa
 - `/stop-force server:<name> [delay:<minutes>]` — stops the unit even with players connected (admin only)
 - `/address server:<name>` — the address to connect to, as host:port (ephemeral)
 - `/password server:<name>` — the server's join password, if one is configured (ephemeral)
+- `/search server:<name>` — the name to look for in the game's server browser, if one is configured (ephemeral)
 - `/admin server:<name>` — the server's admin info, if admin mode is configured (ephemeral)
 - `/players server:<name>` — who is connected, if RCON is configured
 
@@ -51,7 +53,7 @@ src/
 ## Configuration
 
 - `.env` (see [.env.example](.env.example)): `DISCORD_TOKEN`, `APP_ID`, `GUILD_ID`, `DEFAULT_ROLE_ID`, plus optional `ALERT_CHANNEL_ID` for alert notices
-- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), `stopDelayMinutes` (1–30, default `delay` for the stop commands), and `rcon` (enables `/players`)
+- `servers.json` (see [servers.example.json](servers.example.json)): one entry per game with `label`, `unit`, `address`, `port`, `protocol`, plus optional `startupMs` (max 840000 — Discord interactions expire at 15 minutes), `roleId` (an *additional* role required for that server, on top of the base role), `password` (shown by `/password`), `search` (`{ name }`, the server-browser name shown by `/search`), `adminInfo` + `adminRoleId` (shown by `/admin`, gated by that role), `stopDelayMinutes` (1–30, default `delay` for the stop commands), and `rcon` (enables `/players`)
 
 The `rcon` block is `{ port, password, playersCommand }` plus optional `host` (default `127.0.0.1`) and `playersFormat`. `playersCommand` is the only game-specific part — `list` for Minecraft, `ShowPlayers` for Palworld — and `/players` relays the game's raw answer unparsed, which is what keeps it game-agnostic. `playersFormat` names the generic *shape* of that answer so `/stop` can count players: `csv` (header row then one row per player, e.g. Palworld), `sentence` (names after the last colon, e.g. Minecraft) or `lines` (one per line). Omit it and the stop guard simply stays off.
 

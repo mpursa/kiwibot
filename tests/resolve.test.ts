@@ -28,6 +28,8 @@ const NO_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined)
 const WITH_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
 const NO_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId === undefined);
 const WITH_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
+const NO_SEARCH = [...SERVERS.entries()].find(([, srv]) => srv.search === undefined);
+const WITH_SEARCH = [...SERVERS.entries()].find(([, srv]) => srv.search !== undefined);
 
 /**
  * The roles a member needs to pass the server (and optionally admin) checks.
@@ -52,7 +54,7 @@ test('/bot lists every registered command', async () => {
 	}
 });
 
-test('/bot_version reports the package version', async () => {
+test('/bot-version reports the package version', async () => {
 	const { interaction, replies } = fakeInteraction(Command.BOT_VERSION);
 	await resolveBaseCommand(interaction);
 	assert.ok(contentOf(replies[0]).includes(`KiwiBot v.${VERSION}`));
@@ -64,7 +66,7 @@ test('/list with no roles offers no servers', async () => {
 	assert.equal(contentOf(replies[0]), 'No servers available!');
 });
 
-test('/cfg_reload swaps in a freshly read servers.json', async () => {
+test('/cfg-reload swaps in a freshly read servers.json', async () => {
 	const before = SERVERS;
 	const { interaction, replies } = fakeInteraction(Command.CFG_RELOAD);
 	await resolveBaseCommand(interaction);
@@ -76,7 +78,7 @@ test('/cfg_reload swaps in a freshly read servers.json', async () => {
 	for (const key of SERVERS.keys()) assert.ok(content.includes(key), `missing ${key}`);
 });
 
-test('/cfg_reload keeps the previous config when servers.json is malformed', async () => {
+test('/cfg-reload keeps the previous config when servers.json is malformed', async () => {
 	const before = SERVERS;
 	const original = readFileSync(SERVERS_FILE, 'utf8');
 	// The reload path is fixed at import time, so break the fixture itself and restore it.
@@ -168,6 +170,30 @@ test('/password answers a permitted member', async () => {
 	});
 	await resolveServerCommand(interaction);
 	assert.ok(contentOf(replies[0]).includes(srv.label));
+});
+
+test.skipIf(WITH_SEARCH === undefined)('/search shows the server browser name', async () => {
+	assert.ok(WITH_SEARCH);
+	const [key, srv] = WITH_SEARCH;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_SEARCH_INFO, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	const name = srv.search?.name;
+	assert.ok(name);
+	assert.ok(contentOf(replies[0]).includes(name));
+});
+
+test.skipIf(NO_SEARCH === undefined)('/search without search info says so', async () => {
+	assert.ok(NO_SEARCH);
+	const [key, srv] = NO_SEARCH;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_SEARCH_INFO, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.equal(contentOf(replies[0]), `Server ${srv.label} does not have search info!`);
 });
 
 test.skipIf(NO_RCON === undefined)('/players on a server without rcon says so', async () => {

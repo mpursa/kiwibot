@@ -239,3 +239,21 @@ test('rejects non-string optional fields', () => {
 	assert.throws(() => loadServers(fixture({ bad: { ...VALID, password: 5 } })), /password/);
 	assert.throws(() => loadServers(fixture({ bad: { ...VALID, adminRoleId: 5 } })), /adminRoleId/);
 });
+
+test('a search block parses and is absent by default', () => {
+	const servers = loadServers(
+		fixture({
+			testworld: { ...VALID, search: { name: 'Kiwi Testworld' } },
+			otherworld: { ...VALID, label: 'Otherworld', unit: 'otherworld' }
+		})
+	);
+	assert.equal(servers.get('testworld')?.search?.name, 'Kiwi Testworld');
+	assert.equal(servers.get('otherworld')?.search, undefined);
+});
+
+test('rejects a malformed search block', () => {
+	const withSearch = (search: unknown) => () => loadServers(fixture({ bad: { ...VALID, search } }));
+	assert.throws(withSearch('Kiwi Testworld'), /search must be an object/);
+	assert.throws(withSearch({}), /search\.name/);
+	assert.throws(withSearch({ name: '  ' }), /search\.name/);
+});
