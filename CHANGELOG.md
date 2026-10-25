@@ -4,6 +4,21 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.8.2] - 2026-10-25
+
+### Changed
+
+- TypeScript 5.9.3 → 7.0.2 (dev dependency). TypeScript 6+ no longer loads
+  `@types/*` packages automatically, so tsconfig now lists `"types": ["bun"]`.
+  No runtime changes.
+
+## [1.8.1] - 2026-10-25
+
+### Changed
+
+- Dev dependencies bumped by Dependabot: `@types/bun` 1.4.0 → 1.4.3,
+  `prettier` 3.9.6 → 3.9.10. No runtime changes.
+
 ## [1.8.0] - 2026-08-28
 
 ### Added
@@ -157,6 +172,8 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
+[1.8.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.2
+[1.8.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.1
 [1.8.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.0
 [1.7.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.7.0
 [1.6.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.6.1
