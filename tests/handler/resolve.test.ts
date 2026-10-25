@@ -1,24 +1,26 @@
 import { test } from 'bun:test';
 import assert from 'node:assert/strict';
+import { readFileSync, writeFileSync } from 'node:fs';
 
-import { SERVERS, VERSION } from '../src/core/cfg.ts';
+import { SERVERS, VERSION } from '../../src/core/cfg.ts';
 import {
 	Command,
 	COMMANDS,
 	CommandType,
 	discordCommands,
 	MAX_STOP_DELAY_MINUTES
-} from '../src/discord/commands.ts';
+} from '../../src/discord/commands.ts';
 import {
 	commandNotSupportedResponse,
 	resolveAdminCommand,
 	resolveBaseCommand,
 	resolveServerCommand,
 	unknownCommandResponse
-} from '../src/handler/resolve.ts';
-import { contentOf, fakeInteraction } from './fakes.ts';
+} from '../../src/handler/resolve.ts';
+import { contentOf, fakeInteraction } from '../fakes.ts';
 
 const BASE_ROLE = process.env['DEFAULT_ROLE_ID'] as string;
+const SERVERS_FILE = process.env['SERVERS_PATH'] as string;
 
 // bun:test resolves skips at definition time (test.skipIf), so the server
 // lookups the conditional tests depend on are hoisted here.
@@ -26,6 +28,8 @@ const NO_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon === undefined)
 const WITH_RCON = [...SERVERS.entries()].find(([, srv]) => srv.rcon !== undefined);
 const NO_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId === undefined);
 const WITH_ADMIN = [...SERVERS.entries()].find(([, srv]) => srv.adminRoleId !== undefined);
+const NO_SEARCH = [...SERVERS.entries()].find(([, srv]) => srv.search === undefined);
+const WITH_SEARCH = [...SERVERS.entries()].find(([, srv]) => srv.search !== undefined);
 
 /**
  * The roles a member needs to pass the server (and optionally admin) checks.
@@ -50,7 +54,7 @@ test('/bot lists every registered command', async () => {
 	}
 });
 
-test('/bot_version reports the package version', async () => {
+test('/bot-version reports the package version', async () => {
 	const { interaction, replies } = fakeInteraction(Command.BOT_VERSION);
 	await resolveBaseCommand(interaction);
 	assert.ok(contentOf(replies[0]).includes(`KiwiBot v.${VERSION}`));
@@ -60,6 +64,33 @@ test('/list with no roles offers no servers', async () => {
 	const { interaction, replies } = fakeInteraction(Command.LIST);
 	await resolveBaseCommand(interaction);
 	assert.equal(contentOf(replies[0]), 'No servers available!');
+});
+
+test('/cfg-reload swaps in a freshly read servers.json', async () => {
+	const before = SERVERS;
+	const { interaction, replies } = fakeInteraction(Command.CFG_RELOAD);
+	await resolveBaseCommand(interaction);
+	// SERVERS is a live binding, so this import must now see the new map.
+	assert.notEqual(SERVERS, before);
+	assert.deepEqual([...SERVERS.keys()], [...before.keys()]);
+	const content = contentOf(replies[0]);
+	assert.match(content, /^Config reloaded/);
+	for (const key of SERVERS.keys()) assert.ok(content.includes(key), `missing ${key}`);
+});
+
+test('/cfg-reload keeps the previous config when servers.json is malformed', async () => {
+	const before = SERVERS;
+	const original = readFileSync(SERVERS_FILE, 'utf8');
+	// The reload path is fixed at import time, so break the fixture itself and restore it.
+	writeFileSync(SERVERS_FILE, '{}');
+	try {
+		const { interaction, replies } = fakeInteraction(Command.CFG_RELOAD);
+		await resolveBaseCommand(interaction);
+		assert.match(contentOf(replies[0]), /^Reload failed.*no servers/);
+	} finally {
+		writeFileSync(SERVERS_FILE, original);
+	}
+	assert.equal(SERVERS, before);
 });
 
 test('an unregistered base command answers "not implemented"', async () => {
@@ -139,6 +170,30 @@ test('/password answers a permitted member', async () => {
 	});
 	await resolveServerCommand(interaction);
 	assert.ok(contentOf(replies[0]).includes(srv.label));
+});
+
+test.skipIf(WITH_SEARCH === undefined)('/search shows the server browser name', async () => {
+	assert.ok(WITH_SEARCH);
+	const [key, srv] = WITH_SEARCH;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_SEARCH_INFO, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	const name = srv.search?.name;
+	assert.ok(name);
+	assert.ok(contentOf(replies[0]).includes(name));
+});
+
+test.skipIf(NO_SEARCH === undefined)('/search without search info says so', async () => {
+	assert.ok(NO_SEARCH);
+	const [key, srv] = NO_SEARCH;
+	const { interaction, replies } = fakeInteraction(Command.SERVER_SEARCH_INFO, {
+		server: key,
+		roles: rolesFor(srv)
+	});
+	await resolveServerCommand(interaction);
+	assert.equal(contentOf(replies[0]), `Server ${srv.label} does not have search info!`);
 });
 
 test.skipIf(NO_RCON === undefined)('/players on a server without rcon says so', async () => {

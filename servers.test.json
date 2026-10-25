@@ -19,6 +19,9 @@
 		"adminRoleId": "300000000000000003",
 		"autoStopMinutes": 30,
 		"stopDelayMinutes": 5,
+		"search": {
+			"name": "Kiwi Adminworld"
+		},
 		"rcon": {
 			"port": 25599,
 			"password": "test-rcon-pw",

@@ -27,6 +27,13 @@ export interface RconConfig {
 	readonly playersFormat?: PlayersFormat;
 }
 
+/**
+ * How players find the server in the game's own server browser.
+ */
+export interface SearchConfig {
+	readonly name: string;
+}
+
 export interface ServerConfig {
 	readonly label: string;
 	readonly unit: string;
@@ -39,6 +46,7 @@ export interface ServerConfig {
 	readonly roleId?: string;
 	readonly adminRoleId?: string;
 	readonly rcon?: RconConfig;
+	readonly search?: SearchConfig;
 	readonly autoStopMinutes?: number;
 	readonly stopDelayMinutes?: number;
 }
@@ -53,11 +61,22 @@ const MAX_STARTUP_MS = 840_000;
 export const MAX_STOP_DELAY_MINUTES = 30;
 const DEFAULT_RCON_HOST = '127.0.0.1';
 const SERVERS_PATH = process.env['SERVERS_PATH'];
-export const SERVERS = loadServers(
+const SERVERS_URL =
 	SERVERS_PATH !== undefined && SERVERS_PATH !== ''
 		? pathToFileURL(SERVERS_PATH)
-		: new URL('../../servers.json', import.meta.url)
-);
+		: new URL('../../servers.json', import.meta.url);
+export let SERVERS = loadServers(SERVERS_URL);
+
+/**
+ * Re-reads servers.json and swaps SERVERS in place; importers see the new map
+ * through the live binding. A malformed file throws and leaves SERVERS as it was.
+ *
+ * @returns {Servers} The newly loaded map.
+ */
+export function reloadServers(): Servers {
+	SERVERS = loadServers(SERVERS_URL);
+	return SERVERS;
+}
 export const VERSION = loadVersion(new URL('../../package.json', import.meta.url));
 export const REPO_URL = loadRepoUrl(new URL('../../package.json', import.meta.url));
 export const VERSION_CHANGELOG = loadVersionChangelog(
@@ -136,7 +155,7 @@ export function changelogEntry(markdown: string, version: string): string | unde
 }
 
 /**
- * This release's changelog entry, for /bot_version. Display-only, so a
+ * This release's changelog entry, for /bot-version. Display-only, so a
  * missing file or section soft-fails to undefined.
  *
  * @param {URL} path - CHANGELOG.md location, relative to the compiled file.
@@ -216,6 +235,20 @@ function parseRcon(key: string, raw: unknown): RconConfig {
 }
 
 /**
+ * Validates the optional search block.
+ *
+ * @param {string} key - Server key, used in error messages.
+ * @param {unknown} raw - Unvalidated search block.
+ * @returns {SearchConfig} The validated block.
+ */
+function parseSearch(key: string, raw: unknown): SearchConfig {
+	if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+		throw new Error(`servers.json: ${key}.search must be an object`);
+	}
+	return { name: requireString(raw as Record<string, unknown>, 'name', `${key}.search`) };
+}
+
+/**
  * Validates one servers.json entry. JSON.parse returns any; this boundary is
  * what makes every field trustworthy downstream.
  *
@@ -272,6 +305,9 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 	const rconRaw = o['rcon'];
 	const rcon = rconRaw === undefined ? undefined : parseRcon(key, rconRaw);
 
+	const searchRaw = o['search'];
+	const search = searchRaw === undefined ? undefined : parseSearch(key, searchRaw);
+
 	const autoStop = o['autoStopMinutes'];
 	if (
 		autoStop !== undefined &&
@@ -312,6 +348,7 @@ function parseServer(key: string, raw: unknown): ServerConfig {
 		...(typeof roleId === 'string' ? { roleId } : {}),
 		...(typeof adminRoleId === 'string' ? { adminRoleId } : {}),
 		...(rcon !== undefined ? { rcon } : {}),
+		...(search !== undefined ? { search } : {}),
 		...(typeof autoStop === 'number' ? { autoStopMinutes: autoStop } : {}),
 		...(typeof stopDelay === 'number' ? { stopDelayMinutes: stopDelay } : {})
 	};

@@ -7,8 +7,8 @@ import {
 	CommandType,
 	discordCommands,
 	getCommandFromName
-} from '../src/discord/commands.ts';
-import { fakeInteraction } from './fakes.ts';
+} from '../../src/discord/commands.ts';
+import { fakeInteraction } from '../fakes.ts';
 
 test('getCommandFromName resolves registered commands', () => {
 	const cmd = getCommandFromName(fakeInteraction(Command.SERVER_START).interaction);
