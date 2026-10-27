@@ -4,6 +4,13 @@ All notable changes to KiwiBot, per release. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.9.2] - 2026-10-27
+
+### Changed
+
+- Dev dependency bumped by Dependabot: `@types/bun` 1.4.3 → 1.4.4.
+  No runtime changes.
+
 ## [1.9.0] - 2026-10-25
 
 ### Added
@@ -195,6 +202,7 @@ All notable changes to KiwiBot, per release. The format follows
   two-tier role access, socket-aware server states, sudoers fence, hardened
   systemd unit.
 
+[1.9.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.9.2
 [1.9.0]: https://github.com/mpursa/kiwibot/releases/tag/v1.9.0
 [1.8.2]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.2
 [1.8.1]: https://github.com/mpursa/kiwibot/releases/tag/v1.8.1
